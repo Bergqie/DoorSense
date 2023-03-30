@@ -1,4 +1,5 @@
 import 'package:doorsense/pages/manage_users.dart';
+import 'package:doorsense/pages/setting_page.dart';
 import 'package:flutter/material.dart';
 import 'package:faker/faker.dart';
 
@@ -21,7 +22,7 @@ class _HomePageState extends State<HomePage> {
             //for new page
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => ManageUsersPage())
+              MaterialPageRoute(builder: (context) => SettingsPage())
             );
           }, icon: const Icon(Icons.settings))
         ],
@@ -80,3 +81,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+// to send
+// git add .
+// git commit -m "context about the page"
