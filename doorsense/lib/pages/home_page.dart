@@ -1,3 +1,5 @@
+import 'package:doorsense/pages/manage_users.dart';
+import 'package:doorsense/pages/setting_page.dart';
 import 'package:flutter/material.dart';
 import 'package:faker/faker.dart';
 
@@ -16,7 +18,13 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Home'),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.settings))
+          IconButton(onPressed: () {
+            //for new page
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SettingsPage())
+            );
+          }, icon: const Icon(Icons.settings))
         ],
       ),
       body: Container(
@@ -73,3 +81,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+// to send
+// git add .
+// git commit -m "context about the page"
