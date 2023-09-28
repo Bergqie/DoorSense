@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
       brightness: Brightness.dark,
       visualDensity: VisualDensity.adaptivePlatformDensity,
     ),
-    home: HomePage(),
+    home: const WelcomeScreen(),
 
   );
 }

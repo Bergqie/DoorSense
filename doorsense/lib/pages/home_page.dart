@@ -3,6 +3,8 @@ import 'package:doorsense/pages/setting_page.dart';
 import 'package:flutter/material.dart';
 import 'package:faker/faker.dart';
 
+import '../notification_widget.dart';
+
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
@@ -10,14 +12,62 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final faker = Faker();
+  bool isNotificationsMenuOpen = false;
 
-  List<String> groupNames = ["Harry & Sons Electric Company", "Baseball Team", "Biomedical Group LLC", ];
+  final TextEditingController groupCodeController = TextEditingController(text: '');
+
+  int itemLength = 1;
+  List<String> groupNames = ["Ouch, That Hurtz LLC", "Baseball Team", "Biomedical Group LLC", ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Home'),
+        centerTitle: true,
+        leading: IconButton(onPressed: (){
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Enter Group Code'),
+                content: const TextField(
+                  decoration: InputDecoration(hintText: 'Group code'),
+                  maxLength: 6,
+                  textCapitalization: TextCapitalization.characters,
+                  cursorColor: Colors.blue,
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => {},
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(Colors.white),
+                    ),
+                    child: const Text(
+                      'Join',
+                      style: TextStyle(
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        }, icon: const Icon(Icons.group_add)),
         actions: [
+          IconButton(onPressed: () {
+          },
+            icon: const Icon(Icons.notification_add_rounded),),
           IconButton(onPressed: () {
             //for new page
             Navigator.push(
@@ -40,20 +90,92 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 20),
             CircleAvatar(
               radius: 50,
-              backgroundImage: NetworkImage(
-                faker.image.image(random: true),
-              ),
+              backgroundImage: const AssetImage('assets/images/doorsense.png'),
               backgroundColor: Colors.grey[300],
             ),
             const SizedBox(height: 20),
-             Text(
-              faker.person.name(),
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+             const Text(
+              "Team Touch",
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: ListView.builder(
-                itemCount: 3,
+              child: itemLength == 0
+                  ? Center(
+                child: Container(
+                  width: double.infinity,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        offset: Offset(0, 8),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Enter Group Code'),
+                              content: const TextField(
+                                decoration: InputDecoration(hintText: 'Group code'),
+                                maxLength: 6,
+                                textCapitalization: TextCapitalization.characters,
+                                cursorColor: Colors.blue,
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text(
+                                    'Cancel',
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => {},
+                                  style: ButtonStyle(
+                                    backgroundColor: MaterialStateProperty.all(Colors.white),
+                                  ),
+                                  child: const Text(
+                                    'Join',
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+
+
+                      },
+                      child: Center(
+                        child: Text(
+                          'Join Group',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.blue[800],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              )
+              : ListView.builder(
+                itemCount: itemLength,
                 itemBuilder: (BuildContext context, int index) {
                   return ListTile(
                     leading: AspectRatio(
@@ -66,10 +188,15 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     title: Text(groupNames[index]),
-                    subtitle: Text("Admin: ${faker.person.name()}"),
+                    subtitle: const Text("Admin: John Smith"),
                     trailing: IconButton(
                       icon: const Icon(Icons.arrow_circle_right_outlined),
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ManageUsersPage())
+                        );
+                      },
                     ),
                   );
                 },

@@ -1,15 +1,15 @@
 
-import 'package:doorsense/pages/get_started_page.dart';
 import 'package:doorsense/pages/home_page.dart';
+import 'package:doorsense/pages/login_page.dart';
 import 'package:flutter/material.dart';
 
-class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({super.key});
+class StartScreen extends StatefulWidget {
+  const StartScreen({super.key});
 
   @override
-  State<WelcomeScreen> createState() => _WelcomeScreenState();
+  State<StartScreen> createState() => _StartScreenState();
 }
-class _WelcomeScreenState extends State<WelcomeScreen> with WidgetsBindingObserver  {
+class _StartScreenState extends State<StartScreen> with WidgetsBindingObserver  {
 
   @override
   void initState() {
@@ -30,14 +30,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> with WidgetsBindingObserv
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               const Text(
-                'Welcome to DoorSense!',
+                'ARE YOU',
                 style: TextStyle(
                   fontSize: 25,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 25),
               Container(
                 width: double.infinity,
                 height: 50,
@@ -57,13 +57,55 @@ class _WelcomeScreenState extends State<WelcomeScreen> with WidgetsBindingObserv
                   child: InkWell(
                     onTap: () {
                       Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => HomePage())
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginPage()),
                       );
                     },
                     child: Center(
                       child: Text(
-                        'Get Started',
+                        'Returning User',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.blue[800],
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 25),
+              const Text(
+                'OR',
+                style: TextStyle(
+                  fontSize: 25,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 25),
+              Container(
+                width: double.infinity,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black12,
+                      offset: Offset(0, 8),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                    },
+                    child: Center(
+                      child: Text(
+                        'New User',
                         style: TextStyle(
                           fontSize: 18,
                           color: Colors.blue[800],
