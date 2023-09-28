@@ -1,5 +1,6 @@
 import 'package:doorsense/pages/manage_users.dart';
 import 'package:doorsense/pages/setting_page.dart';
+import 'package:doorsense/pages/test_color_page.dart';
 import 'package:flutter/material.dart';
 import 'package:faker/faker.dart';
 
