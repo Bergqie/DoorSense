@@ -14,6 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'DoorSense',
+    debugShowCheckedModeBanner: false,
     theme: ThemeData(
       primarySwatch: Colors.orange,
       secondaryHeaderColor: Colors.purple,

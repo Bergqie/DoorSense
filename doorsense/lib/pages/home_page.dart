@@ -22,6 +22,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         automaticallyImplyLeading: false,
         title: const Text('Home'),
         centerTitle: true,
@@ -63,7 +64,7 @@ class _HomePageState extends State<HomePage> {
               );
             },
           );
-        }, icon: const Icon(Icons.group_add)),
+        }, icon: const Icon(Icons.group_add_rounded)),
         actions: [
           IconButton(onPressed: () {
           },
@@ -74,7 +75,7 @@ class _HomePageState extends State<HomePage> {
               context,
               MaterialPageRoute(builder: (context) => SettingsPage())
             );
-          }, icon: const Icon(Icons.settings))
+          }, icon: const Icon(Icons.settings_rounded))
         ],
       ),
       body: Container(
