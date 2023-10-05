@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
     title: 'DoorSense',
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
-      primarySwatch: Colors.orange,
+      primarySwatch: Colors.grey,
       secondaryHeaderColor: Colors.purple,
       brightness: Brightness.dark,
       visualDensity: VisualDensity.adaptivePlatformDensity,

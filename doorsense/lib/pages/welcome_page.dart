@@ -1,6 +1,7 @@
 
 import 'package:doorsense/pages/get_started_page.dart';
 import 'package:doorsense/pages/home_page.dart';
+import 'package:doorsense/pages/login_page.dart';
 import 'package:flutter/material.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -58,7 +59,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with WidgetsBindingObserv
                     onTap: () {
                       Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => HomePage())
+                          MaterialPageRoute(builder: (context) => const LoginPage())
                       );
                     },
                     child: Center(
