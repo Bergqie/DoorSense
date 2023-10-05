@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
+import 'package:flutter_firebase_chat_core/flutter_firebase_chat_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'home_page.dart';
@@ -232,7 +233,9 @@ class _LoginPageState extends State<LoginPage> {
         'lastSeen': DateTime.now(),
       });
       if (!mounted) return;
-      Navigator.of(context).pop();
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
     } catch (e) {
       setState(() {
         _loggingIn = false;
@@ -279,14 +282,14 @@ class _LoginPageState extends State<LoginPage> {
     FirebaseFirestore.instance.collection('users').doc(user.user!.uid);
     final userDoc = await userRef.get();
     if (!userDoc.exists) {
-      // await FirebaseChatCore.instance.createUserInFirestore(
-      //   types.User(
-      //     firstName: user.user!.displayName,
-      //     id: user.user!.uid,
-      //     imageUrl: user.user!.photoURL,
-      //     lastName: '',
-      //   ),
-      // );
+      await FirebaseChatCore.instance.createUserInFirestore(
+        types.User(
+          firstName: user.user!.displayName,
+          id: user.user!.uid,
+          imageUrl: user.user!.photoURL,
+          lastName: '',
+        ),
+      );
       user.user!.sendEmailVerification();
     } else {
 

@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:doorsense/pages/welcome_page.dart';
 import 'package:faker/faker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 
@@ -10,6 +13,32 @@ class SettingsPage extends StatefulWidget {
 
 // for top bar
 class _SettingsPageState extends State<SettingsPage> {
+
+  String username = '';
+  String imageUrl = '';
+
+  Future<void> getUserInformation() async {
+    final userRef =  FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid);
+    final userDoc = await userRef.get();
+    setState(() {
+      username = "${userDoc['firstName']} ${userDoc['lastName']}" ?? "NULL";
+      imageUrl = userDoc['imageUrl'];
+    });
+  }
+
+  void getUserInfo() async {
+    await getUserInformation();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getUserInfo();
+  }
+  @override
+  void dispose() {
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,12 +59,12 @@ class _SettingsPageState extends State<SettingsPage> {
                 const SizedBox(height: 20),
                 CircleAvatar(
                   radius: 50,
-                  backgroundImage: const AssetImage('assets/images/doorsense.png'),
+                  backgroundImage: NetworkImage(imageUrl),
                   backgroundColor: Colors.grey[300],
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  "Team Touch",
+                Text(
+                  username,
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
@@ -91,6 +120,10 @@ class _SettingsPageState extends State<SettingsPage> {
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () {
+                            FirebaseAuth.instance.signOut();
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (context) => WelcomeScreen()),
+                            );
                           },
                           child: Center(
                             child: Text(

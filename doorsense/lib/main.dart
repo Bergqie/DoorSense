@@ -1,10 +1,15 @@
 import 'package:doorsense/pages/home_page.dart';
 import 'package:doorsense/pages/manage_users.dart';
+import 'package:firebase_core/firebase_core.dart';
 
+import 'firebase_options.dart';
 import 'pages/welcome_page.dart';
 import 'package:flutter/material.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MyApp());
 }
 

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_firebase_chat_core/flutter_firebase_chat_core.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:intl/intl.dart';
 import 'dart:io';
 
@@ -14,14 +16,14 @@ class RegistrationPage extends StatefulWidget {
 }
 
 class _RegistrationPageState extends State<RegistrationPage> {
-  // final FirebaseAuth _auth = FirebaseAuth.instance;
-  // final FirebaseStorage _storage =
-  //     FirebaseStorage.instance;
+   final FirebaseAuth _auth = FirebaseAuth.instance;
+   final FirebaseStorage _storage = FirebaseStorage.instance;
   final ImagePicker _imagePicker = ImagePicker();
 
   String firstName = '';
   String lastName = '';
-  String dob = '';
+  String email = '';
+  String password = '';
   File? selectedImage;
 
   DateTime selectedDate = DateTime.now();
@@ -43,32 +45,45 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   Future<void> _registerUser() async {
     try {
-      // UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-      //   email: 'user@example.com', // Replace with your authentication logic
-      //   password: 'password',
-      // );
-      //
-      // // Upload image to Firebase Storage
-      // if (selectedImage != null) {
-      //   String uid = userCredential.user!.uid;
-      //   Reference ref = _storage.ref().child('user_images/$uid.jpg');
-      //   UploadTask uploadTask = ref.putFile(selectedImage!);
-      //
-      //   // Wait for the image to be uploaded
-      //   await uploadTask.whenComplete(() {
-      //     // Get the download URL of the uploaded image
-      //     ref.getDownloadURL().then((imageUrl) {
-      //       print('Image URL: $imageUrl');
-      //       // Save the image URL to the user's profile data
-      //       // You can use Firebase Firestore or Realtime Database to store this data
-      //     });
-      //   });
-      // }
-      //
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email, // Replace with your authentication logic
+        password: password,
+      );
+      String imageUrl = '';
+
+      // Upload image to Firebase Storage
+      if (selectedImage != null) {
+        String uid = userCredential.user!.uid;
+        Reference ref = _storage.ref().child('user_images/$uid.jpg');
+        UploadTask uploadTask = ref.putFile(selectedImage!);
+
+        // Wait for the image to be uploaded
+        await uploadTask.whenComplete(() {
+          // Get the download URL of the uploaded image
+          ref.getDownloadURL().then((url) {
+            print('Image URL: $url');
+            // Save the image URL to the user's profile data
+            // You can use Firebase Firestore or Realtime Database to store this data
+            setState(() {
+              imageUrl = url;
+            });
+          });
+        });
+      }
+
       // // Add code to save the user's first name, last name, and date of birth to Firebase
       // // Firestore or Realtime Database
       //
-      // //TODO: Register User Here
+      await FirebaseChatCore.instance.createUserInFirestore(
+        types.User(
+          dob: selectedDate.toString(),
+          firstName: firstName,
+          fingerPrintHash: '',
+          id: userCredential.user!.uid,
+          imageUrl: imageUrl,
+          lastName: lastName,
+        ),
+      );
 
       // Navigate to the home page or another screen after registration
       Navigator.of(context).pushReplacement(
@@ -127,6 +142,23 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     onChanged: (value) {
                       setState(() {
                         lastName = value;
+                      });
+                    },
+                  ),
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'Email Address'),
+                    onChanged: (value) {
+                      setState(() {
+                        email = value;
+                      });
+                    },
+                  ),
+                  TextFormField(
+                    keyboardType: TextInputType.visiblePassword,
+                    decoration: const InputDecoration(labelText: 'Password'),
+                    onChanged: (value) {
+                      setState(() {
+                        password = value;
                       });
                     },
                   ),
