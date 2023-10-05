@@ -1,6 +1,9 @@
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doorsense/pages/manage_users.dart';
 import 'package:doorsense/pages/setting_page.dart';
 import 'package:doorsense/pages/test_color_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:faker/faker.dart';
 
@@ -17,8 +20,34 @@ class _HomePageState extends State<HomePage> {
 
   final TextEditingController groupCodeController = TextEditingController(text: '');
 
+
+  String username = '';
+  String imageUrl = '';
   int itemLength = 1;
   List<String> groupNames = ["Ouch, That Hurtz LLC", "Baseball Team", "Biomedical Group LLC", ];
+
+  Future<void> getUserInformation() async {
+    final userRef =  FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid);
+    final userDoc = await userRef.get();
+    setState(() {
+      username = "${userDoc['firstName']} ${userDoc['lastName']}" ?? "NULL";
+      imageUrl = userDoc['imageUrl'];
+    });
+  }
+
+  void getUserInfo() async {
+    await getUserInformation();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getUserInfo();
+  }
+  @override
+  void dispose() {
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,13 +121,13 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 20),
             CircleAvatar(
               radius: 50,
-              backgroundImage: const AssetImage('assets/images/doorsense.png'),
+              backgroundImage: NetworkImage(imageUrl),
               backgroundColor: Colors.grey[300],
             ),
             const SizedBox(height: 20),
-             const Text(
-              "Team Touch",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              Text(
+              username,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             Expanded(
