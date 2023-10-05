@@ -4,10 +4,10 @@ import 'package:doorsense/pages/register_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
-import 'package:flutter_firebase_chat_core/flutter_firebase_chat_core.dart';
+import 'package:doorsense/flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../flutter_chat_core/src/firebase_chat_core.dart';
 import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
