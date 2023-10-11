@@ -17,8 +17,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final faker = Faker();
-  bool isNotificationsMenuOpen = false;
+  bool isLoading = true;
 
   final TextEditingController groupCodeController =
       TextEditingController(text: '');
@@ -27,14 +26,25 @@ class _HomePageState extends State<HomePage> {
   String imageUrl = '';
 
   Future<void> getUserInformation() async {
-    final userRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(FirebaseAuth.instance.currentUser!.uid);
-    final userDoc = await userRef.get();
-    setState(() {
-      username = "${userDoc['firstName']} ${userDoc['lastName']}" ?? "NULL";
-      imageUrl = userDoc['imageUrl'];
-    });
+    try {
+      setState(() {
+        isLoading = true;
+      });
+      final userRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid);
+      final userDoc = await userRef.get();
+      setState(() {
+        username = "${userDoc['firstName']} ${userDoc['lastName']}" ?? "NULL";
+        imageUrl = userDoc['imageUrl'];
+      });
+    } catch(e) {
+      print("An error occurred getting the information");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   void getUserInfo() async {
@@ -179,7 +189,7 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (context, index) {
                             final room = snapshot.data![index];
                             return GroupListTile(
-                            room: room,);
+                            room: room);
                           });
                     })),
           ],

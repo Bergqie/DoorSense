@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:faker/faker.dart';
 
 class RegisterFingerprintPage extends StatefulWidget {
+  const RegisterFingerprintPage({super.key});
+
   @override
   _RegisterFingerprintPageState createState() =>
       _RegisterFingerprintPageState();
@@ -16,6 +18,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: const Text('Fingerprints'),
         centerTitle: true,
       ),

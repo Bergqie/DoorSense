@@ -19,6 +19,7 @@ abstract class Room extends Equatable {
     this.createdAt,
     required this.id,
     this.imageUrl,
+    this.groupCode,
     this.lastMessages,
     this.metadata,
     this.name,
@@ -31,6 +32,7 @@ abstract class Room extends Equatable {
     int? createdAt,
     required String id,
     String? imageUrl,
+    String? groupCode,
     List<Message>? lastMessages,
     Map<String, dynamic>? metadata,
     String? name,
@@ -71,12 +73,15 @@ abstract class Room extends Equatable {
   /// List of users which are in the room.
   final List<User> users;
 
+  final String? groupCode;
+
   /// Equatable props.
   @override
   List<Object?> get props => [
         createdAt,
         id,
         imageUrl,
+    groupCode,
         lastMessages,
         metadata,
         name,
@@ -95,6 +100,7 @@ abstract class Room extends Equatable {
     int? createdAt,
     String? id,
     String? imageUrl,
+    String? groupCode,
     List<Message>? lastMessages,
     Map<String, dynamic>? metadata,
     String? name,
@@ -113,6 +119,7 @@ class _Room extends Room {
     super.createdAt,
     required super.id,
     super.imageUrl,
+    super.groupCode,
     super.lastMessages,
     super.metadata,
     super.name,
@@ -126,6 +133,7 @@ class _Room extends Room {
     dynamic createdAt = _Unset,
     String? id,
     dynamic imageUrl = _Unset,
+    dynamic groupCode = _Unset,
     dynamic lastMessages = _Unset,
     dynamic metadata = _Unset,
     dynamic name = _Unset,
@@ -147,6 +155,7 @@ class _Room extends Room {
         type: type == _Unset ? this.type : type as RoomType?,
         updatedAt: updatedAt == _Unset ? this.updatedAt : updatedAt as int?,
         users: users ?? this.users,
+        groupCode: groupCode == _Unset ? this.groupCode : groupCode as String?,
       );
 }
 
