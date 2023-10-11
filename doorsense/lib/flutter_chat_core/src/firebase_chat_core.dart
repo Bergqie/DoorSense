@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -95,6 +97,19 @@ class FirebaseChatCore {
     );
   }
 
+  String generateRandomCode(int length) {
+    const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    final random = Random();
+    String code = '';
+
+    for (var i = 0; i < length; i++) {
+      final index = random.nextInt(charset.length);
+      code += charset[index];
+    }
+
+    return code;
+  }
+
   /// Creates a direct chat for 2 people. Add [metadata] for any additional
   /// custom data.
   Future<types.Room> createRoom(
@@ -167,6 +182,93 @@ class FirebaseChatCore {
       'imageUrl': null,
       'metadata': metadata,
       'name': null,
+      'type': types.RoomType.direct.toShortString(),
+      'updatedAt': FieldValue.serverTimestamp(),
+      'userIds': userIds,
+      'userRoles': null,
+    });
+
+    return types.Room(
+      id: room.id,
+      metadata: metadata,
+      type: types.RoomType.direct,
+      users: users,
+    );
+  }
+
+  ///Creates a single room for the user
+  Future<types.Room> createSingleRoom(
+      {
+        Map<String, dynamic>? metadata,
+      }) async {
+    final fu = firebaseUser;
+
+    if (fu == null) return Future.error('User does not exist');
+
+    // Sort two user ids array to always have the same array for both users,
+    // this will make it easy to find the room if exist and make one read only.
+    final userIds = [fu.uid]..sort();
+    final groupCode = generateRandomCode(6);
+
+    final roomQuery = await getFirebaseFirestore()
+        .collection(config.roomsCollectionName)
+        .where('type', isEqualTo: types.RoomType.direct.toShortString())
+        .where('userIds', isEqualTo: userIds)
+        .limit(1)
+        .get();
+
+    // Check if room already exist.
+    if (roomQuery.docs.isNotEmpty) {
+      final room = (await processRoomsQuery(
+        fu,
+        getFirebaseFirestore(),
+        roomQuery,
+        config.usersCollectionName,
+      ))
+          .first;
+
+      return room;
+    }
+
+    // To support old chats created without sorted array,
+    // try to check the room by reversing user ids array.
+    final oldRoomQuery = await getFirebaseFirestore()
+        .collection(config.roomsCollectionName)
+        .where('type', isEqualTo: types.RoomType.direct.toShortString())
+        .where('userIds', isEqualTo: userIds.reversed.toList())
+        .limit(1)
+        .get();
+
+    // Check if room already exist.
+    if (oldRoomQuery.docs.isNotEmpty) {
+      final room = (await processRoomsQuery(
+        fu,
+        getFirebaseFirestore(),
+        oldRoomQuery,
+        config.usersCollectionName,
+      ))
+          .first;
+
+      return room;
+    }
+
+    final currentUser = await fetchUser(
+      getFirebaseFirestore(),
+      fu.uid,
+      config.usersCollectionName,
+    );
+
+    final users = [types.User.fromJson(currentUser)];
+
+    // Create new room with sorted user ids array.
+    final room = await getFirebaseFirestore()
+        .collection(config.roomsCollectionName)
+        .add({
+      'createdAt': FieldValue.serverTimestamp(),
+      'imageUrl': null,
+      'groupCode': groupCode,
+      'metadata': metadata,
+      'name': '${fu.displayName}\s Vehicle',
       'type': types.RoomType.direct.toShortString(),
       'updatedAt': FieldValue.serverTimestamp(),
       'userIds': userIds,

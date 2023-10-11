@@ -20,10 +20,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
    final FirebaseStorage _storage = FirebaseStorage.instance;
   final ImagePicker _imagePicker = ImagePicker();
 
-  String firstName = '';
-  String lastName = '';
-  String email = '';
-  String password = '';
+  FocusNode? _focusNode;
+  TextEditingController firstNameController = TextEditingController();
+  TextEditingController lastNameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
   File? selectedImage;
 
   DateTime selectedDate = DateTime.now();
@@ -46,8 +47,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
   Future<void> _registerUser() async {
     try {
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email, // Replace with your authentication logic
-        password: password,
+        email: emailController.text, // Replace with your authentication logic
+        password: passwordController.text,
       );
       String imageUrl = '';
 
@@ -77,11 +78,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
       await FirebaseChatCore.instance.createUserInFirestore(
         types.User(
           dob: selectedDate.toString(),
-          firstName: firstName,
+          firstName: firstNameController.text,
           fingerPrintHash: '',
           id: userCredential.user!.uid,
           imageUrl: imageUrl,
-          lastName: lastName,
+          lastName: lastNameController.text,
         ),
       );
 
@@ -107,6 +108,17 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+  }
+  @override
+  void dispose() {
+    super.dispose();
+    _focusNode?.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
@@ -129,38 +141,111 @@ class _RegistrationPageState extends State<RegistrationPage> {
             child: SingleChildScrollView(
               child: Column(
                 children: <Widget>[
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: 'First Name'),
-                    onChanged: (value) {
-                      setState(() {
-                        firstName = value;
-                      });
+                  TextField(
+                    autocorrect: true,
+                    autofillHints: [AutofillHints.username],
+                    autofocus: true,
+                    controller: firstNameController,
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(8),
+                        ),
+                      ),
+                      hintText: 'First Name',
+                      suffix: IconButton(
+                        icon: const Icon(Icons.cancel),
+                        onPressed: () => firstNameController?.clear(),
+                      ),
+                    ),
+                    keyboardType: TextInputType.name,
+                    onEditingComplete: () {
+                      _focusNode?.requestFocus();
                     },
+                    // readOnly: _registering,
+                    textCapitalization: TextCapitalization.none,
+                    textInputAction: TextInputAction.next,
                   ),
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: 'Last Name'),
-                    onChanged: (value) {
-                      setState(() {
-                        lastName = value;
-                      });
-                    },
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: TextField(
+                      autocorrect: true,
+                      autofillHints: [AutofillHints.name],
+                      autofocus: true,
+                      controller: lastNameController,
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(8),
+                          ),
+                        ),
+                        hintText: 'Last Name',
+                        suffix: IconButton(
+                          icon: const Icon(Icons.cancel),
+                          onPressed: () => lastNameController.clear(),
+                        ),
+                      ),
+                      keyboardType: TextInputType.name,
+                      onEditingComplete: () {
+                        _focusNode?.requestFocus();
+                      },
+                      // readOnly: _registering,
+                      textCapitalization: TextCapitalization.none,
+                      textInputAction: TextInputAction.next,
+                    ),
                   ),
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: 'Email Address'),
-                    onChanged: (value) {
-                      setState(() {
-                        email = value;
-                      });
-                    },
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: TextField(
+                      autocorrect: false,
+                      autofillHints: [AutofillHints.email],
+                      autofocus: true,
+                      controller: emailController,
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(8),
+                          ),
+                        ),
+                        hintText: 'Email',
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.cancel),
+                          onPressed: () => emailController.clear(),
+                        ),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      onEditingComplete: () {
+                        _focusNode?.requestFocus();
+                      },
+                      textCapitalization: TextCapitalization.none,
+                      textInputAction: TextInputAction.next,
+                    ),
                   ),
-                  TextFormField(
-                    keyboardType: TextInputType.visiblePassword,
-                    decoration: const InputDecoration(labelText: 'Password'),
-                    onChanged: (value) {
-                      setState(() {
-                        password = value;
-                      });
-                    },
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: TextField(
+                      autocorrect: false,
+                      autofillHints: [AutofillHints.password],
+                      controller: passwordController,
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(8),
+                          ),
+                        ),
+                        hintText: 'Password',
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.cancel),
+                          onPressed: () => passwordController.clear(),
+                        ),
+                      ),
+                      focusNode: _focusNode,
+                      keyboardType: TextInputType.emailAddress,
+                      obscureText: true,
+                      // onEditingComplete: _register,
+                      textCapitalization: TextCapitalization.none,
+                      textInputAction: TextInputAction.done,
+                    ),
                   ),
                   const SizedBox(height: 20,),
                   ElevatedButton(

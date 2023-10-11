@@ -1,17 +1,15 @@
+import 'package:doorsense/pages/group_page.dart';
 import 'package:faker/faker.dart';
 import 'package:flutter/material.dart';
+import 'package:doorsense/flutter_chat_types/flutter_chat_types.dart' as types;
 
 import '../pages/manage_users.dart';
 
 class GroupListTile extends StatefulWidget {
-  final String groupImageUrl;
-  final String groupAdmins;
-  final String groupName;
+  final types.Room room;
   const GroupListTile({
     super.key,
-    required this.groupImageUrl,
-    required this.groupAdmins,
-    required this.groupName
+    required this.room
   });
   @override
   _GroupListTileState createState() => _GroupListTileState();
@@ -36,17 +34,17 @@ class _GroupListTileState extends State<GroupListTile> {
         aspectRatio: 1,
         child: ClipOval(
           child: Image.network(
-            widget.groupImageUrl, fit: BoxFit.cover,
+            widget.room.imageUrl!, fit: BoxFit.cover,
           ),
         ),
       ),
-      title: Text(widget.groupName),
-      subtitle: Text("Admin(s): ${widget.groupAdmins}"),
+      title: Text(widget.room.name!),
+      subtitle: Text("Admin(s): "),
       trailing: IconButton(
         icon: const Icon(Icons.arrow_circle_right_outlined),
         onPressed: () {
           Navigator.push(context,
-              MaterialPageRoute(builder: (context) => ManageUsersPage()));
+              MaterialPageRoute(builder: (context) => GroupPage(room: widget.room,)));
         },
       ),
     );
