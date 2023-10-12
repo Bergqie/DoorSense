@@ -10,6 +10,7 @@ Room _$RoomFromJson(Map<String, dynamic> json) => Room(
       createdAt: json['createdAt'] as int?,
       id: json['id'] as String,
       imageUrl: json['imageUrl'] as String?,
+      groupCode: json['groupCode'] as String?,
       lastMessages: (json['lastMessages'] as List<dynamic>?)
           ?.map((e) => Message.fromJson(e as Map<String, dynamic>))
           .toList(),

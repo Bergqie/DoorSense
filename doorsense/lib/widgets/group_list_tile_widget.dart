@@ -39,7 +39,7 @@ class _GroupListTileState extends State<GroupListTile> {
         ),
       ),
       title: Text(widget.room.name!),
-      subtitle: Text("Admin(s): "),
+      subtitle: widget.room.users.length == 1 ? Text("Admin(s): ${widget.room.users.first.firstName} ${widget.room.users.first.lastName}") : Text("Admin(s): "),
       trailing: IconButton(
         icon: const Icon(Icons.arrow_circle_right_outlined),
         onPressed: () {

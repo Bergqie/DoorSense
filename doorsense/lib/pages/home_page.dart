@@ -1,11 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:doorsense/pages/manage_users.dart';
+import 'package:doorsense/flutter_chat_types/src/room.dart';
 import 'package:doorsense/pages/setting_page.dart';
-import 'package:doorsense/pages/test_color_page.dart';
 import 'package:doorsense/widgets/group_list_tile_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:faker/faker.dart';
 import 'package:doorsense/flutter_chat_types/flutter_chat_types.dart' as types;
 
 import '../flutter_chat_core/src/firebase_chat_core.dart';
@@ -24,6 +22,20 @@ class _HomePageState extends State<HomePage> {
 
   String username = '';
   String imageUrl = '';
+
+  List<types.Room> rooms = [];
+
+  RoomType getRoomTypeFromString(String type) {
+    switch (type) {
+      case 'direct':
+        return RoomType.direct;
+      case 'group':
+        return RoomType.group;
+      default:
+        return RoomType.direct; // Example default value
+    }
+  }
+
 
   Future<void> getUserInformation() async {
     try {
@@ -60,6 +72,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     super.dispose();
+    groupCodeController.dispose();
   }
 
 
@@ -78,8 +91,9 @@ class _HomePageState extends State<HomePage> {
                 builder: (BuildContext context) {
                   return AlertDialog(
                     title: const Text('Enter Group Code'),
-                    content: const TextField(
-                      decoration: InputDecoration(hintText: 'Group code'),
+                    content: TextField(
+                      controller: groupCodeController,
+                      decoration: const InputDecoration(hintText: 'Group code'),
                       maxLength: 6,
                       textCapitalization: TextCapitalization.characters,
                       cursorColor: Colors.blue,
@@ -95,7 +109,17 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: () => {},
+                        onPressed: () {
+                          for (int i = 0; i < rooms.length; i++) {
+                            if (rooms[i].groupCode == groupCodeController.text) {
+                              //TODO: Send a notification that the user wants to join the group to the admin
+                              print("Group codes match!!!");
+                            }
+                            else {
+                              //TODO: Throw an error saying the room doesn't exist
+                            }
+                          }
+                        },
                         style: ButtonStyle(
                           backgroundColor:
                               MaterialStateProperty.all(Colors.white),
@@ -154,7 +178,7 @@ class _HomePageState extends State<HomePage> {
                     stream: FirebaseChatCore.instance.rooms(),
                     initialData: const [],
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      if (!snapshot.hasData) {
                         return Container(
                           alignment: Alignment.center,
                           margin: const EdgeInsets.only(
@@ -188,6 +212,14 @@ class _HomePageState extends State<HomePage> {
                           itemCount: snapshot.data!.length,
                           itemBuilder: (context, index) {
                             final room = snapshot.data![index];
+                            rooms.add(room);
+                            if (room.groupCode != null) {
+                              // Handle the case where groupCode is not null.
+                              print(snapshot.data![index].groupCode);
+                            } else {
+                              // Handle the case where groupCode is null or not available yet.
+                              print("groupCode is null or not available yet.");
+                            }
                             return GroupListTile(
                             room: room);
                           });

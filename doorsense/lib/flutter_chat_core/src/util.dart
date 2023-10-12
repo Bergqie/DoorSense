@@ -70,6 +70,7 @@ Future<types.Room> processRoomDocument(
   var imageUrl = data['imageUrl'] as String?;
   var name = data['name'] as String?;
   final type = data['type'] as String;
+  final groupCode = data['groupCode'] as String?;
   final userIds = data['userIds'] as List<dynamic>;
   final userRoles = data['userRoles'] as Map<String, dynamic>?;
 
@@ -102,6 +103,7 @@ Future<types.Room> processRoomDocument(
   data['imageUrl'] = imageUrl;
   data['name'] = name;
   data['users'] = users;
+  data['groupCode'] = groupCode;
 
   if (data['lastMessages'] != null) {
     final lastMessages = data['lastMessages'].map((lm) {
@@ -120,6 +122,5 @@ Future<types.Room> processRoomDocument(
 
     data['lastMessages'] = lastMessages;
   }
-
   return types.Room.fromJson(data);
 }
