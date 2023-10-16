@@ -29,6 +29,19 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   DateTime selectedDate = DateTime.now();
 
+  //a method that checks if all the information is valid. The selected date must be 18 years old starting from the current date
+  bool isValid() {
+    if (firstNameController.text.isEmpty ||
+        lastNameController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        passwordController.text.isEmpty ||
+        selectedImage == null ||
+        selectedDate.isAfter(DateTime.now().subtract(const Duration(days: 18 * 365)))) {
+      return false;
+    }
+    return true;
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -46,6 +59,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   Future<void> _registerUser() async {
     try {
+
+      if (isValid()){
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: emailController.text, // Replace with your authentication logic
         password: passwordController.text,
@@ -72,9 +87,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
         });
       }
 
-      // // Add code to save the user's first name, last name, and date of birth to Firebase
-      // // Firestore or Realtime Database
-      //
       await FirebaseChatCore.instance.createUserInFirestore(
         types.User(
           dob: selectedDate.toString(),
@@ -90,6 +102,24 @@ class _RegistrationPageState extends State<RegistrationPage> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => HomePage()),
       );
+      } else {
+        //Show alert dialogue that the information is not valid
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Invalid Information'),
+              content: const Text('Please make sure you enter in all the information correctly'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      }
     } catch (e) {
       print('Error: $e');
       // Handle registration errors here
@@ -141,6 +171,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
             child: SingleChildScrollView(
               child: Column(
                 children: <Widget>[
+                  selectedImage == null
+                      ? const Text('No Image Selected')
+                      : CircleAvatar(backgroundImage: FileImage(selectedImage!), radius: 50),
+                  ElevatedButton(
+                    onPressed: _pickImage,
+                    child: const Text('Pick an Image'),
+                  ),
+                  const SizedBox(height: 20.0),
                   TextField(
                     autocorrect: true,
                     autofillHints: [AutofillHints.username],
@@ -251,14 +289,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   ElevatedButton(
                     onPressed: () => _selectDate(context),
                     child: Text('Date of Birth: ${DateFormat('yyyy-MM-dd').format(selectedDate)}'),
-                  ),
-                  const SizedBox(height: 20.0),
-                  selectedImage == null
-                      ? const Text('No Image Selected')
-                      : CircleAvatar(backgroundImage: FileImage(selectedImage!), radius: 50),
-                  ElevatedButton(
-                    onPressed: _pickImage,
-                    child: const Text('Pick an Image'),
                   ),
                   const SizedBox(height: 20.0),
                   ElevatedButton(

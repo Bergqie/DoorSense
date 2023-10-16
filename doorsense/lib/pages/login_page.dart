@@ -20,7 +20,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   FocusNode? _focusNode;
   bool _loggingIn = false;
-  bool _registering = false;
   TextEditingController? _passwordController;
   TextEditingController? _usernameController;
 
@@ -28,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     _focusNode = FocusNode();
-    _passwordController = TextEditingController(text: 'Qawsed1-');
+    _passwordController = TextEditingController(text: '');
     _usernameController = TextEditingController(text: '');
   }
 
@@ -138,36 +137,6 @@ class _LoginPageState extends State<LoginPage> {
                 label: const Text('Login'),
                 onPressed: () {
                   _loggingIn ? null : _login();
-                },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  minimumSize: const Size(240, 48),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-              ),
-              const SizedBox(height: 25,),
-              const Text(
-                'OR',
-                style: TextStyle(
-                  fontSize: 25,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 25),
-              ElevatedButton.icon(
-                icon: Image.asset(
-                  'assets/images/google_logo.png',
-                  width: 24,
-                  height: 24,
-                ),
-                label: const Text('Sign in with Google'),
-                onPressed: () {
-                  signInWithGoogle();
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.black,

@@ -1,9 +1,7 @@
 import 'package:doorsense/pages/group_page.dart';
-import 'package:faker/faker.dart';
 import 'package:flutter/material.dart';
 import 'package:doorsense/flutter_chat_types/flutter_chat_types.dart' as types;
 
-import '../pages/manage_users.dart';
 
 class GroupListTile extends StatefulWidget {
   final types.Room room;
