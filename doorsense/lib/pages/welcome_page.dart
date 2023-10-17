@@ -19,6 +19,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with WidgetsBindingObserv
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: Colors.black,
         body: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(

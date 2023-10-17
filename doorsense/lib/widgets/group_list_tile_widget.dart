@@ -1,4 +1,5 @@
 import 'package:doorsense/pages/group_page.dart';
+import 'package:faker/faker.dart';
 import 'package:flutter/material.dart';
 import 'package:doorsense/flutter_chat_types/flutter_chat_types.dart' as types;
 
@@ -32,7 +33,7 @@ class _GroupListTileState extends State<GroupListTile> {
         aspectRatio: 1,
         child: ClipOval(
           child: Image.network(
-            widget.room.imageUrl!, fit: BoxFit.cover,
+            widget.room.imageUrl!.isNotEmpty ? widget.room.imageUrl! : faker.image.image(random: true), fit: BoxFit.cover,
           ),
         ),
       ),

@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:doorsense/flutter_chat_core/flutter_firebase_chat_core.dart';
 import 'package:doorsense/flutter_chat_types/src/room.dart';
+import 'package:doorsense/pages/notifications_page.dart';
 import 'package:doorsense/pages/setting_page.dart';
 import 'package:doorsense/widgets/group_list_tile_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -36,7 +38,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-
   Future<void> getUserInformation() async {
     try {
       setState(() {
@@ -50,7 +51,7 @@ class _HomePageState extends State<HomePage> {
         username = "${userDoc['firstName']} ${userDoc['lastName']}" ?? "NULL";
         imageUrl = userDoc['imageUrl'];
       });
-    } catch(e) {
+    } catch (e) {
       print("An error occurred getting the information");
     } finally {
       setState(() {
@@ -61,6 +62,64 @@ class _HomePageState extends State<HomePage> {
 
   void getUserInfo() async {
     await getUserInformation();
+  }
+
+  //Returns the userIds the are role type admin in the room
+  Future<List<String>> getAdmins(String roomId) async {
+    final roomQuery =
+        await FirebaseFirestore.instance.collection('rooms').doc(roomId).get();
+
+    final room = roomQuery.data()!;
+
+    final userIds = room['userIds'] as List<dynamic>;
+    final userRoles = room['userRoles'] as Map<dynamic, dynamic>;
+
+    final admins = <String>[];
+
+    for (var i = 0; i < userIds.length; i++) {
+      if (userRoles[userIds[i]] == types.Role.admin.toShortString()) {
+        admins.add(userIds[i] as String);
+      }
+    }
+
+    return admins;
+  }
+
+  void sendGroupCodeRequest(String userId, String groupCode) async {
+    final userActivityFeedRef = FirebaseFirestore.instance
+        .collection('feed')
+        .doc(userId)
+        .collection('feedList')
+        .add({
+      "type": "request",
+      "userId": FirebaseAuth.instance.currentUser!.uid,
+      "groupCode": groupCode,
+      "date": DateTime.now().toString(),
+    });
+  }
+
+  void showRequestSent() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Request Sent'),
+          content: const Text(
+              'Your request has been sent to the admin of the group.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Ok',
+                style: TextStyle(
+                  color: Colors.blue,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -75,10 +134,10 @@ class _HomePageState extends State<HomePage> {
     groupCodeController.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         automaticallyImplyLeading: false,
@@ -109,14 +168,31 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           for (int i = 0; i < rooms.length; i++) {
-                            if (rooms[i].groupCode == groupCodeController.text) {
-                              //TODO: Send a notification that the user wants to join the group to the admin
-                              print("Group codes match!!!");
-                            }
-                            else {
+                            if (rooms[i].groupCode ==
+                                groupCodeController.text) {
+                              //get the admin of the group
+                              List<String> admins =
+                                  await getAdmins(rooms[i].id);
+                              print(admins.length);
+                              print(rooms[i].groupCode);
+                              //send a request to the admin inside of the room that matches the group code
+                              try {
+                                sendGroupCodeRequest(
+                                    admins[0], groupCodeController.text);
+                              } catch (e) {
+                                print("An error occurred sending the request");
+                              } finally {
+                                //Close the dialog
+                                Navigator.of(context).pop();
+                                //Show a dialogue saying the request was sent
+                                showRequestSent();
+                              }
+                            } else {
                               //TODO: Throw an error saying the room doesn't exist
+                              print(
+                                  "ERROR: No room found with that group code");
                             }
                           }
                         },
@@ -139,7 +215,12 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Icons.group_add_rounded)),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const NotificationsPage()));
+            },
             icon: const Icon(Icons.notification_add_rounded),
           ),
           IconButton(
@@ -178,34 +259,38 @@ class _HomePageState extends State<HomePage> {
                     stream: FirebaseChatCore.instance.rooms(),
                     initialData: const [],
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        //although the user is not in any roomss get all of the rooms and add them to the list
+
                         return Container(
-                          alignment: Alignment.center,
-                          margin: const EdgeInsets.only(
-                            bottom: 200,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const Text(
-                                "You are not in any groups.\n\nClick below to create one!",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              IconButton(
-                                  onPressed: () async{
-                                    await FirebaseChatCore.instance.createSingleRoom();
-                                  },
-                                  icon: const Icon(
-                                    Icons.add_circle_rounded,
-                                    size: 60,
-                                    color: Color(0xFFDFDEDE),
-                                  )),
-                            ],
-                          ),
-                        );
+                                alignment: Alignment.center,
+                                margin: const EdgeInsets.only(
+                                  bottom: 200,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      "You are not in any groups.\n\nClick below to create one!",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    IconButton(
+                                        onPressed: () async {
+                                          await FirebaseChatCore.instance
+                                              .createSingleRoom();
+                                        },
+                                        icon: const Icon(
+                                          Icons.add_circle_rounded,
+                                          size: 60,
+                                          color: Color(0xFFDFDEDE),
+                                        )),
+                                  ],
+                                ),
+                              );
                       }
 
                       return ListView.builder(
@@ -215,13 +300,11 @@ class _HomePageState extends State<HomePage> {
                             rooms.add(room);
                             if (room.groupCode != null) {
                               // Handle the case where groupCode is not null.
-                              print(snapshot.data![index].groupCode);
                             } else {
                               // Handle the case where groupCode is null or not available yet.
                               print("groupCode is null or not available yet.");
                             }
-                            return GroupListTile(
-                            room: room);
+                            return GroupListTile(room: room);
                           });
                     })),
           ],

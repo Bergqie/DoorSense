@@ -70,21 +70,17 @@ class _RegistrationPageState extends State<RegistrationPage> {
       // Upload image to Firebase Storage
       if (selectedImage != null) {
         String uid = userCredential.user!.uid;
-        Reference ref = _storage.ref().child('user_images/$uid.jpg');
-        UploadTask uploadTask = ref.putFile(selectedImage!);
-
-        // Wait for the image to be uploaded
-        await uploadTask.whenComplete(() {
-          // Get the download URL of the uploaded image
-          ref.getDownloadURL().then((url) {
-            print('Image URL: $url');
-            // Save the image URL to the user's profile data
-            // You can use Firebase Firestore or Realtime Database to store this data
-            setState(() {
-              imageUrl = url;
-            });
+        final file = File(selectedImage!.path);
+        try {
+          final reference = FirebaseStorage.instance.ref().child('users').child(uid).child('profile_photo');
+          await reference.putFile(file);
+          final uri = await reference.getDownloadURL();
+          setState(() {
+            imageUrl = uri;
           });
-        });
+        } catch(e) {
+          print(e);
+        }
       }
 
       await FirebaseChatCore.instance.createUserInFirestore(
@@ -151,6 +147,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: Colors.black,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           centerTitle: true,
@@ -263,7 +260,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     margin: const EdgeInsets.symmetric(vertical: 8),
                     child: TextField(
                       autocorrect: false,
-                      autofillHints: [AutofillHints.password],
+                      autofillHints: const [AutofillHints.password],
                       controller: passwordController,
                       decoration: InputDecoration(
                         border: const OutlineInputBorder(
