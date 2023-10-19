@@ -64,6 +64,36 @@ class _HomePageState extends State<HomePage> {
     await getUserInformation();
   }
 
+  //Returns a list of type rooms that returns all the rooms in the firebase collection
+  Future<List<Room>> getAllRooms() async {
+    try {
+      // Reference to the Firestore collection
+      CollectionReference roomsCollection = FirebaseFirestore.instance.collection('rooms');
+
+      // Get the documents in the 'rooms' collection
+      QuerySnapshot roomSnapshot = await roomsCollection.get();
+
+      // Create a list to store the Room objects
+      List<Room> rooms = [];
+
+      // Loop through the documents and convert them to Room objects
+      for (var doc in roomSnapshot.docs) {
+        rooms.add(types.Room.fromJson(doc));
+      }
+
+      return rooms;
+    } catch (e) {
+      // Handle any errors that may occur during the process
+      print('Error fetching rooms: $e');
+      return [];
+    }
+  }
+
+  void getRooms() async {
+    rooms = await getAllRooms();
+    print('Rooms: ${rooms.length}');
+  }
+
   //Returns the userIds the are role type admin in the room
   Future<List<String>> getAdmins(String roomId) async {
     final roomQuery =
@@ -126,6 +156,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     getUserInfo();
+    getRooms();
   }
 
   @override
@@ -297,13 +328,14 @@ class _HomePageState extends State<HomePage> {
                           itemCount: snapshot.data!.length,
                           itemBuilder: (context, index) {
                             final room = snapshot.data![index];
-                            rooms.add(room);
-                            if (room.groupCode != null) {
-                              // Handle the case where groupCode is not null.
-                            } else {
-                              // Handle the case where groupCode is null or not available yet.
-                              print("groupCode is null or not available yet.");
-                            }
+                            // rooms.add(room);
+                            // print(rooms[index].groupCode);
+                            // if (room.groupCode != null) {
+                            //   // Handle the case where groupCode is not null.
+                            // } else {
+                            //   // Handle the case where groupCode is null or not available yet.
+                            //   print("groupCode is null or not available yet.");
+                            // }
                             return GroupListTile(room: room);
                           });
                     })),
