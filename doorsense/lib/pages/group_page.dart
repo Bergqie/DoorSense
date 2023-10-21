@@ -8,6 +8,8 @@ import 'package:faker/faker.dart';
 import 'package:doorsense/flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:url_launcher/url_launcher.dart';
 
+import '../utils/util.dart';
+
 class GroupPage extends StatefulWidget {
   final types.Room room;
   const GroupPage({super.key, required this.room});
@@ -35,6 +37,13 @@ class _GroupPageState extends State<GroupPage> {
     await getGroupCode();
   }
 
+  List<String> admins = [];
+
+
+  void getGroupAdmins() async {
+    admins = await getAdmins(widget.room.id);
+  }
+
   void checkAdminStatus() {
     if (widget.room.users.length == 1) {
        setState(() {
@@ -43,6 +52,9 @@ class _GroupPageState extends State<GroupPage> {
          adminImageUrl = widget.room.users.first.imageUrl!;
 
        });
+    }
+    else {
+
     }
    }
 
