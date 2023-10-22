@@ -91,6 +91,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           id: userCredential.user!.uid,
           imageUrl: imageUrl,
           lastName: lastNameController.text,
+          email: emailController.text
         ),
       );
 

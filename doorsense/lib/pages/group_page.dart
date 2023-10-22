@@ -18,15 +18,19 @@ class GroupPage extends StatefulWidget {
 }
 
 class _GroupPageState extends State<GroupPage> {
-
   bool isAdmin = false;
   String adminName = '';
   String adminEmail = '';
   String adminImageUrl = '';
   String groupCode = '';
 
+  String userName = '';
+  String userEmail = '';
+  String userImageUrl = '';
+
   Future<void> getGroupCode() async {
-    final roomRef = FirebaseFirestore.instance.collection('rooms').doc(widget.room.id);
+    final roomRef =
+        FirebaseFirestore.instance.collection('rooms').doc(widget.room.id);
     final roomDoc = await roomRef.get();
     setState(() {
       groupCode = roomDoc['groupCode'];
@@ -39,30 +43,64 @@ class _GroupPageState extends State<GroupPage> {
 
   List<String> admins = [];
 
-
   void getGroupAdmins() async {
     admins = await getAdmins(widget.room.id);
   }
 
-  void checkAdminStatus() {
-    if (widget.room.users.length == 1) {
-       setState(() {
-         adminName = "${widget.room.users.first.firstName} ${widget.room.users.first.lastName}";
-         adminEmail = "${FirebaseAuth.instance.currentUser!.email}";
-         adminImageUrl = widget.room.users.first.imageUrl!;
+  List<types.User> roomUsers = [];
 
-       });
+  //gets the list of types.User from the widget.room.users list
+  List<types.User> getUsers() {
+    List<types.User> users = [];
+    for (int i = 0; i < widget.room.users.length; i++) {
+      users.add(widget.room.users[i]);
     }
-    else {
+    return users;
+  }
 
+  void getCurrentUserInformation() {
+    for (int i = 0; i < roomUsers.length; i++) {
+      //if the length is 1, then the current user is the only user in the room and is the admin
+      if (roomUsers.length == 1) {
+        setState(() {
+          isAdmin = true;
+          userName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
+          userEmail = roomUsers[i].email!;
+          userImageUrl = roomUsers[i].imageUrl!;
+          adminName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
+          adminEmail = roomUsers[i].email!;
+          adminImageUrl = roomUsers[i].imageUrl!;
+        });
+      } else if (roomUsers[i].id == FirebaseAuth.instance.currentUser!.uid) {
+        setState(() {
+          userName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
+          userEmail = roomUsers[i].email!;
+          userImageUrl = roomUsers[i].imageUrl!;
+        });
+        // Move the current user to the first position in the list
+        roomUsers.insert(0, roomUsers.removeAt(i));
+      }
+      //else if get the admin information
+      else if (admins.contains(roomUsers[i].id)) {
+        setState(() {
+          isAdmin = true;
+          adminName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
+          adminEmail = roomUsers[i].email!;
+          adminImageUrl = roomUsers[i].imageUrl!;
+        });
+      }
     }
-   }
+  }
 
   @override
   void initState() {
     super.initState();
-    checkAdminStatus();
     getGroupCodeInfo();
+    getGroupAdmins();
+    roomUsers = getUsers();
+    Future.delayed(const Duration(milliseconds: 500), () {
+      getCurrentUserInformation();
+    });
   }
 
   @override
@@ -90,8 +128,16 @@ class _GroupPageState extends State<GroupPage> {
         child: Column(
           children: <Widget>[
             const SizedBox(height: 20),
-            !isAdmin ? Text("Group Code: $groupCode", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),) : const SizedBox(height: 20),
-            const SizedBox(height: 10,),
+            !isAdmin
+                ? Text(
+                    "Group Code: $groupCode",
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16),
+                  )
+                : const SizedBox(height: 20),
+            const SizedBox(
+              height: 10,
+            ),
             CircleAvatar(
               radius: 50,
               backgroundImage: NetworkImage(
@@ -106,42 +152,72 @@ class _GroupPageState extends State<GroupPage> {
             ),
             ContactWidget(adminEmail),
             const SizedBox(height: 20),
-            Expanded(
-                child: ListView.builder(
-                  itemCount: widget.room.users.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return ListTile(
-                      leading: AspectRatio(
-                        aspectRatio: 1,
-                        child: ClipOval(
-                          child: index == 0
-                              ? Image.network(widget.room.users.first.imageUrl!, fit: BoxFit.cover,)
-                              : Image.network(faker.image.image(random: true), fit: BoxFit.cover),
+            admins.contains(FirebaseAuth.instance.currentUser!.uid)
+                ? Expanded(
+                    child: ListView.builder(
+                        itemCount: widget.room.users.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return ListTile(
+                            leading: AspectRatio(
+                              aspectRatio: 1,
+                              child: ClipOval(
+                                child: index == 0
+                                    ? Image.network(
+                                        userImageUrl,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Image.network(roomUsers[index].imageUrl!,
+                                        fit: BoxFit.cover),
+                              ),
+                            ),
+                            title: Text(index == 0
+                                ? "You: $userName"
+                                : "${roomUsers[index].firstName} ${roomUsers[index].lastName}"),
+                            subtitle: Text(index == 0
+                                ? FirebaseAuth.instance.currentUser!.email!
+                                : ''),
+                            trailing: IconButton(
+                              icon: index == 0
+                                  ? const Icon(Icons.fingerprint)
+                                  : const Icon(Icons.delete),
+                              onPressed: () {
+                                if (index == 0) {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              const RegisterFingerprintPage()));
+                                } else {
+                                  // Handle delete action for other items
+                                }
+                              },
+                            ),
+                          );
+                        }))
+                : Expanded(
+                    child: ListTile(
+                    leading: AspectRatio(
+                      aspectRatio: 1,
+                      child: ClipOval(
+                        child: Image.network(
+                          userImageUrl,
+                          fit: BoxFit.cover,
                         ),
                       ),
-                      title: Text(index == 0
-                          ? "You: ${widget.room.users.first.firstName} ${widget.room.users.first.lastName}"
-                          : faker.person.name()),
-                      subtitle: Text(index == 0
-                          ? FirebaseAuth.instance.currentUser!.email!
-                          : faker.internet.email()),
-                      trailing: IconButton(
-                        icon: index == 0 ? const Icon(Icons.fingerprint) : const Icon(Icons.delete),
-                        onPressed: () {
-                          if (index == 0) {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const RegisterFingerprintPage())
-                            );
-                          } else {
-                            // Handle delete action for other items
-                          }
-                        },
-                      ),
-                    );
-                  },
-                )
-            ),
+                    ),
+                    title: Text("You: $userName"),
+                    subtitle: Text(FirebaseAuth.instance.currentUser!.email!),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.fingerprint),
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const RegisterFingerprintPage()));
+                      },
+                    ),
+                  )),
           ],
         ),
       ),
