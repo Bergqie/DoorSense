@@ -357,14 +357,6 @@ class _HomePageState extends State<HomePage> {
                           itemCount: snapshot.data!.length,
                           itemBuilder: (context, index) {
                             final room = snapshot.data![index];
-                            // rooms.add(room);
-                            // print(rooms[index].groupCode);
-                            // if (room.groupCode != null) {
-                            //   // Handle the case where groupCode is not null.
-                            // } else {
-                            //   // Handle the case where groupCode is null or not available yet.
-                            //   print("groupCode is null or not available yet.");
-                            // }
                             return GroupListTile(room: room);
                           });
                     })),

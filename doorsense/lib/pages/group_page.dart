@@ -72,11 +72,25 @@ class _GroupPageState extends State<GroupPage> {
           adminImageUrl = roomUsers[i].imageUrl!;
         });
       } else if (roomUsers[i].id == FirebaseAuth.instance.currentUser!.uid) {
-        setState(() {
-          userName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
-          userEmail = roomUsers[i].email!;
-          userImageUrl = roomUsers[i].imageUrl!;
-        });
+
+        if (admins.contains(roomUsers[i].id)) {
+          setState(() {
+            userName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
+            userEmail = roomUsers[i].email!;
+            userImageUrl = roomUsers[i].imageUrl!;
+            isAdmin = true;
+            adminName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
+            adminEmail = roomUsers[i].email!;
+            adminImageUrl = roomUsers[i].imageUrl!;
+          });
+        }
+        else {
+          setState(() {
+            userName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
+            userEmail = roomUsers[i].email!;
+            userImageUrl = roomUsers[i].imageUrl!;
+          });
+        }
         // Move the current user to the first position in the list
         roomUsers.insert(0, roomUsers.removeAt(i));
       }
