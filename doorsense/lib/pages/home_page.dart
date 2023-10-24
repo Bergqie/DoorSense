@@ -10,6 +10,7 @@ import 'package:doorsense/flutter_chat_types/flutter_chat_types.dart' as types;
 
 import '../flutter_chat_core/src/firebase_chat_core.dart';
 import '../notification_widget.dart';
+import '../utils/util.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -64,55 +65,43 @@ class _HomePageState extends State<HomePage> {
     await getUserInformation();
   }
 
+  Stream<int> getNotificationsStream() {
+    final notificationsRef = FirebaseFirestore.instance
+        .collection('feed')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .collection('feedList');
+
+    return notificationsRef.snapshots().map((snapshot) => snapshot.size);
+  }
+
   //Returns a list of type rooms that returns all the rooms in the firebase collection
-  Future<List<Room>> getAllRooms() async {
+  Future<void> getAllRooms() async {
     try {
-      // Reference to the Firestore collection
-      CollectionReference roomsCollection = FirebaseFirestore.instance.collection('rooms');
+      final roomRef = FirebaseFirestore.instance.collection('rooms');
+      final roomQuery = await roomRef.get();
 
-      // Get the documents in the 'rooms' collection
-      QuerySnapshot roomSnapshot = await roomsCollection.get();
+      rooms.clear(); // Clear the existing list if any
 
-      // Create a list to store the Room objects
-      List<Room> rooms = [];
+      for (final roomSnapshot in roomQuery.docs) {
+        final room = Room(
+            id: roomSnapshot.id,
+            type: getRoomTypeFromString(roomSnapshot.data()['type']),
+            users: [],
+            groupCode: roomSnapshot.data()['groupCode']
+            // Add other fields here based on your data model
+            );
 
-      // Loop through the documents and convert them to Room objects
-      for (var doc in roomSnapshot.docs) {
-        rooms.add(types.Room.fromJson(doc));
+        rooms.add(room);
       }
-
-      return rooms;
     } catch (e) {
       // Handle any errors that may occur during the process
       print('Error fetching rooms: $e');
-      return [];
     }
   }
 
   void getRooms() async {
-    rooms = await getAllRooms();
+    await getAllRooms();
     print('Rooms: ${rooms.length}');
-  }
-
-  //Returns the userIds the are role type admin in the room
-  Future<List<String>> getAdmins(String roomId) async {
-    final roomQuery =
-        await FirebaseFirestore.instance.collection('rooms').doc(roomId).get();
-
-    final room = roomQuery.data()!;
-
-    final userIds = room['userIds'] as List<dynamic>;
-    final userRoles = room['userRoles'] as Map<dynamic, dynamic>;
-
-    final admins = <String>[];
-
-    for (var i = 0; i < userIds.length; i++) {
-      if (userRoles[userIds[i]] == types.Role.admin.toShortString()) {
-        admins.add(userIds[i] as String);
-      }
-    }
-
-    return admins;
   }
 
   void sendGroupCodeRequest(String userId, String groupCode) async {
@@ -212,6 +201,7 @@ class _HomePageState extends State<HomePage> {
                               try {
                                 sendGroupCodeRequest(
                                     admins[0], groupCodeController.text);
+                                print("Request sent");
                               } catch (e) {
                                 print("An error occurred sending the request");
                               } finally {
@@ -245,14 +235,54 @@ class _HomePageState extends State<HomePage> {
             },
             icon: const Icon(Icons.group_add_rounded)),
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const NotificationsPage()));
+          StreamBuilder<int>(
+            stream: getNotificationsStream(),
+            builder: (context, snapshot) {
+              // Check if the Stream is still active and receiving data
+              if (!snapshot.hasData) {
+                return IconButton(
+                  onPressed: () {},
+                  icon: Icon(Icons.notifications_rounded),
+                );
+              }
+
+              // Get the notification count from the stream data
+              int notificationCount = snapshot.data ?? 0;
+
+              // Display the red circle with the notification count
+              return Stack(children: [
+                IconButton(
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => NotificationsPage(),
+                    ));
+                  },
+                  icon: Icon(Icons.notifications_rounded),
+                ),
+                notificationCount > 0
+                    ? Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            notificationCount > 9
+                                ? '9+'
+                                : notificationCount.toString(),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      )
+                    : SizedBox(),
+              ]);
             },
-            icon: const Icon(Icons.notification_add_rounded),
           ),
           IconButton(
               onPressed: () {
@@ -294,48 +324,39 @@ class _HomePageState extends State<HomePage> {
                         //although the user is not in any roomss get all of the rooms and add them to the list
 
                         return Container(
-                                alignment: Alignment.center,
-                                margin: const EdgeInsets.only(
-                                  bottom: 200,
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      "You are not in any groups.\n\nClick below to create one!",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    IconButton(
-                                        onPressed: () async {
-                                          await FirebaseChatCore.instance
-                                              .createSingleRoom();
-                                        },
-                                        icon: const Icon(
-                                          Icons.add_circle_rounded,
-                                          size: 60,
-                                          color: Color(0xFFDFDEDE),
-                                        )),
-                                  ],
-                                ),
-                              );
+                          alignment: Alignment.center,
+                          margin: const EdgeInsets.only(
+                            bottom: 200,
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "You are not in any groups.\n\nClick below to create one!",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              IconButton(
+                                  onPressed: () async {
+                                    await FirebaseChatCore.instance
+                                        .createSingleRoom();
+                                  },
+                                  icon: const Icon(
+                                    Icons.add_circle_rounded,
+                                    size: 60,
+                                    color: Color(0xFFDFDEDE),
+                                  )),
+                            ],
+                          ),
+                        );
                       }
 
                       return ListView.builder(
                           itemCount: snapshot.data!.length,
                           itemBuilder: (context, index) {
                             final room = snapshot.data![index];
-                            // rooms.add(room);
-                            // print(rooms[index].groupCode);
-                            // if (room.groupCode != null) {
-                            //   // Handle the case where groupCode is not null.
-                            // } else {
-                            //   // Handle the case where groupCode is null or not available yet.
-                            //   print("groupCode is null or not available yet.");
-                            // }
                             return GroupListTile(room: room);
                           });
                     })),

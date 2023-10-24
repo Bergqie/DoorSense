@@ -1,5 +1,5 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -14,7 +14,6 @@ class ActivityFeedItem extends StatefulWidget {
 }
 
 class _ActivityFeedItemState extends State<ActivityFeedItem> {
-
   String _username = '';
   String _photoUrl = '';
 
@@ -41,19 +40,38 @@ class _ActivityFeedItemState extends State<ActivityFeedItem> {
   void showMediaPreview() {
     if (widget.snap['type'] == "request") {
       preview = SizedBox(
-          height: 50,
-          width: 50,
-          child: Row(children: [
-            IconButton(onPressed: (){}, icon: const Icon(Icons.check_circle_rounded, color: Colors.green,)),
-            IconButton(onPressed: (){}, icon: const Icon(Icons.delete_rounded, color: Colors.red,))
-          ],)
-      );
+          height: 100,
+          width: 100,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              IconButton(
+                  onPressed: () {
+                    acceptGroupCodeRequest(widget.snap['userId'], widget.snap['groupCode']);
+                  },
+                  icon: const Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.green,
+                  )),
+              IconButton(
+                  onPressed: () {
+                    declineGroupCodeRequest(
+                        FirebaseAuth.instance.currentUser!.uid);
+                  },
+                  icon: const Icon(
+                    Icons.delete_rounded,
+                    color: Colors.red,
+                  ))
+            ],
+          ));
     } else {
       preview = Text("");
     }
 
-    if (widget.snap['type'] == "like") {
+    if (widget.snap['type'] == "request") {
       textPreview = " is requesting access to your group.";
+    } else if (widget.snap['type'] == "accept") {
+      textPreview = " accepted your group invite.";
     } else {
       textPreview = "";
     }
@@ -66,7 +84,7 @@ class _ActivityFeedItemState extends State<ActivityFeedItem> {
     final userDoc = await userRef.get();
 
     setState(() {
-      _username = '${userDoc['firstName']} ${userDoc['lastName']}'  ?? '';
+      _username = '${userDoc['firstName']} ${userDoc['lastName']}' ?? '';
       _photoUrl = userDoc['imageUrl'] ?? '';
     });
   }
@@ -75,16 +93,52 @@ class _ActivityFeedItemState extends State<ActivityFeedItem> {
     await getUserInformation();
   }
 
+  void declineGroupCodeRequest(String userId) async {
+    final userActivityFeedRef = FirebaseFirestore.instance
+        .collection('feed')
+        .doc(userId)
+        .collection('feedList')
+        .doc(widget.feedItemId)
+        .delete();
+  }
+
+  void acceptGroupCodeRequest(String userId, String groupCode) async {
+
+    final roomRef = FirebaseFirestore.instance.collection('rooms');
+    final roomQuery = await roomRef.get();
+
+    for (final roomSnapshot in roomQuery.docs) {
+      if (roomSnapshot.data()['groupCode'] == groupCode) {
+        roomSnapshot.reference.update({
+          'userIds': FieldValue.arrayUnion([widget.snap['userId']]),
+        });
+      }
+    }
+
+    final userActivityFeedRef = FirebaseFirestore.instance
+        .collection('feed')
+        .doc(userId)
+        .collection('feedList')
+        .add({
+      "type": "accept",
+      "userId": FirebaseAuth.instance.currentUser!.uid,
+      "groupCode": groupCode,
+      "date": DateTime.now().toString(),
+    });
+
+    declineGroupCodeRequest(FirebaseAuth.instance.currentUser!.uid);
+  }
+
   @override
   void initState() {
     super.initState();
     getUserInfo();
   }
 
-  @override dispose() {
+  @override
+  dispose() {
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -94,8 +148,7 @@ class _ActivityFeedItemState extends State<ActivityFeedItem> {
       padding: const EdgeInsets.only(bottom: 2.0),
       child: ListTile(
         title: GestureDetector(
-          onTap: () {
-          },
+          onTap: () {},
           child: RichText(
             overflow: TextOverflow.ellipsis,
             text: TextSpan(
@@ -113,7 +166,8 @@ class _ActivityFeedItemState extends State<ActivityFeedItem> {
                 ]),
           ),
         ),
-        leading: const CircleAvatar(
+        leading: CircleAvatar(
+          backgroundImage: NetworkImage(_photoUrl),
           radius: 16,
         ),
         subtitle: Text(
