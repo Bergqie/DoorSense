@@ -2,6 +2,7 @@
 import 'package:doorsense/pages/get_started_page.dart';
 import 'package:doorsense/pages/home_page.dart';
 import 'package:doorsense/pages/login_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -11,10 +12,31 @@ class WelcomeScreen extends StatefulWidget {
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 class _WelcomeScreenState extends State<WelcomeScreen> with WidgetsBindingObserver  {
+  bool _error = false;
+  bool _initialized = false;
+  User? _user;
+
+  void initializeFlutterFire() async {
+    try {
+      FirebaseAuth.instance.authStateChanges().listen((User? user) {
+        setState(() {
+          _user = user;
+        });
+      });
+      setState(() {
+        _initialized = true;
+      });
+    } catch (e) {
+      setState(() {
+        _error = true;
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    initializeFlutterFire();
   }
   @override
   Widget build(BuildContext context) {

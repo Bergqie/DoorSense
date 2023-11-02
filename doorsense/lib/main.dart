@@ -1,8 +1,10 @@
+import 'package:doorsense/pages/home_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'firebase_options.dart';
 import 'pages/welcome_page.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -14,6 +16,8 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   MyApp({super.key});
 
+  User? user;
+
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'DoorSense',
@@ -24,7 +28,7 @@ class MyApp extends StatelessWidget {
       brightness: Brightness.dark,
       visualDensity: VisualDensity.adaptivePlatformDensity,
     ),
-    home: const WelcomeScreen(),
+    home: user == null ? const WelcomeScreen() : HomePage(),
 
   );
 }
