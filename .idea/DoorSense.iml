@@ -4,12 +4,14 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/doorsense/.pub" />
-      <excludeFolder url="file://$MODULE_DIR$/doorsense/build" />
       <excludeFolder url="file://$MODULE_DIR$/doorsense/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/doorsense/build" />
+      <excludeFolder url="file://$MODULE_DIR$/mothers_pantry/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/mothers_pantry/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/mothers_pantry/build" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Dart SDK" level="project" />
-    <orderEntry type="library" name="Dart Packages" level="project" />
+    <orderEntry type="library" name="Flutter Plugins" level="project" />
   </component>
 </module>
