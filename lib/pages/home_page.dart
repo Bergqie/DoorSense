@@ -17,7 +17,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   bool isLoading = true;
 
   final TextEditingController groupCodeController =
@@ -141,9 +141,58 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void showErrorRequest() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('An Error Occurred'),
+          content: const Text(
+              'An error occurred while trying to send a request. Please make sure the group code you entered was correct.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Ok',
+                style: TextStyle(
+                  color: Colors.blue,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  bool _error = false;
+  bool _initialized = false;
+  User? _user;
+
+  void initializeFlutterFire() async {
+    try {
+     // requestPermissionForNotifications();
+     // initNotificationInformation();
+      FirebaseAuth.instance.authStateChanges().listen((User? user) {
+        setState(() {
+          _user = user;
+        });
+      });
+      setState(() {
+        _initialized = true;
+      });
+    } catch (e) {
+      setState(() {
+        _error = true;
+      });
+    }
+  }
+
   @override
   void initState() {
+    WidgetsBinding.instance.addObserver(this);
     super.initState();
+    initializeFlutterFire();
     getUserInfo();
     getRooms();
   }
@@ -203,7 +252,7 @@ class _HomePageState extends State<HomePage> {
                                     admins[0], groupCodeController.text);
                                 print("Request sent");
                               } catch (e) {
-                                print("An error occurred sending the request");
+                                showErrorRequest();
                               } finally {
                                 //Close the dialog
                                 Navigator.of(context).pop();
@@ -211,9 +260,7 @@ class _HomePageState extends State<HomePage> {
                                 showRequestSent();
                               }
                             } else {
-                              //TODO: Throw an error saying the room doesn't exist
-                              print(
-                                  "ERROR: No room found with that group code");
+                              showErrorRequest();
                             }
                           }
                         },
