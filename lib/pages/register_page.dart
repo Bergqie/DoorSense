@@ -6,7 +6,6 @@ import 'package:doorsense/flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:intl/intl.dart';
 import 'dart:io';
 
-
 import '../flutter_chat_core/src/firebase_chat_core.dart';
 import 'home_page.dart';
 
@@ -16,8 +15,8 @@ class RegistrationPage extends StatefulWidget {
 }
 
 class _RegistrationPageState extends State<RegistrationPage> {
-   final FirebaseAuth _auth = FirebaseAuth.instance;
-   final FirebaseStorage _storage = FirebaseStorage.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
   final ImagePicker _imagePicker = ImagePicker();
 
   FocusNode? _focusNode;
@@ -36,7 +35,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
         emailController.text.isEmpty ||
         passwordController.text.isEmpty ||
         selectedImage == null ||
-        selectedDate.isAfter(DateTime.now().subtract(const Duration(days: 18 * 365)))) {
+        selectedDate
+            .isAfter(DateTime.now().subtract(const Duration(days: 18 * 365)))) {
       return false;
     }
     return true;
@@ -59,46 +59,49 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   Future<void> _registerUser() async {
     try {
+      if (isValid()) {
+        UserCredential userCredential =
+            await _auth.createUserWithEmailAndPassword(
+          email: emailController.text, // Replace with your authentication logic
+          password: passwordController.text,
+        );
+        String imageUrl = '';
 
-      if (isValid()){
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: emailController.text, // Replace with your authentication logic
-        password: passwordController.text,
-      );
-      String imageUrl = '';
-
-      // Upload image to Firebase Storage
-      if (selectedImage != null) {
-        String uid = userCredential.user!.uid;
-        final file = File(selectedImage!.path);
-        try {
-          final reference = FirebaseStorage.instance.ref().child('users').child(uid).child('profile_photo');
-          await reference.putFile(file);
-          final uri = await reference.getDownloadURL();
-          setState(() {
-            imageUrl = uri;
-          });
-        } catch(e) {
-          print(e);
+        // Upload image to Firebase Storage
+        if (selectedImage != null) {
+          String uid = userCredential.user!.uid;
+          final file = File(selectedImage!.path);
+          try {
+            final reference = FirebaseStorage.instance
+                .ref()
+                .child('users')
+                .child(uid)
+                .child('profile_photo');
+            await reference.putFile(file);
+            final uri = await reference.getDownloadURL();
+            setState(() {
+              imageUrl = uri;
+            });
+          } catch (e) {
+            print(e);
+          }
         }
-      }
 
-      await FirebaseChatCore.instance.createUserInFirestore(
-        types.User(
-          dob: selectedDate.toString(),
-          firstName: firstNameController.text,
-          fingerPrintHash: '',
-          id: userCredential.user!.uid,
-          imageUrl: imageUrl,
-          lastName: lastNameController.text,
-          email: emailController.text
-        ),
-      );
+        await FirebaseChatCore.instance.createUserInFirestore(
+          types.User(
+              dob: selectedDate.toString(),
+              firstName: firstNameController.text,
+              fingerPrintHashList: [],
+              id: userCredential.user!.uid,
+              imageUrl: imageUrl,
+              lastName: lastNameController.text,
+              email: emailController.text),
+        );
 
-      // Navigate to the home page or another screen after registration
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
+        // Navigate to the home page or another screen after registration
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
       } else {
         //Show alert dialogue that the information is not valid
         showDialog(
@@ -106,7 +109,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
           builder: (BuildContext context) {
             return AlertDialog(
               title: const Text('Invalid Information'),
-              content: const Text('Please make sure you enter in all the information correctly'),
+              content: const Text(
+                  'Please make sure you enter in all the information correctly'),
               actions: <Widget>[
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
@@ -139,6 +143,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     super.initState();
     _focusNode = FocusNode();
   }
+
   @override
   void dispose() {
     super.dispose();
@@ -171,7 +176,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 children: <Widget>[
                   selectedImage == null
                       ? const Text('No Image Selected')
-                      : CircleAvatar(backgroundImage: FileImage(selectedImage!), radius: 50),
+                      : CircleAvatar(
+                          backgroundImage: FileImage(selectedImage!),
+                          radius: 50),
                   ElevatedButton(
                     onPressed: _pickImage,
                     child: const Text('Pick an Image'),
@@ -283,10 +290,13 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       textInputAction: TextInputAction.done,
                     ),
                   ),
-                  const SizedBox(height: 20,),
+                  const SizedBox(
+                    height: 20,
+                  ),
                   ElevatedButton(
                     onPressed: () => _selectDate(context),
-                    child: Text('Date of Birth: ${DateFormat('yyyy-MM-dd').format(selectedDate)}'),
+                    child: Text(
+                        'Date of Birth: ${DateFormat('yyyy-MM-dd').format(selectedDate)}'),
                   ),
                   const SizedBox(height: 20.0),
                   ElevatedButton(

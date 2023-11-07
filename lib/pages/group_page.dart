@@ -200,7 +200,7 @@ class _GroupPageState extends State<GroupPage> {
                                       context,
                                       MaterialPageRoute(
                                           builder: (context) =>
-                                              const RegisterFingerprintPage()));
+                                               RegisterFingerprintPage(room: widget.room,)));
                                 } else {
                                   // Handle delete action for other items
                                 }
@@ -228,7 +228,7 @@ class _GroupPageState extends State<GroupPage> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) =>
-                                    const RegisterFingerprintPage()));
+                                     RegisterFingerprintPage(room: widget.room,)));
                       },
                     ),
                   )),

@@ -49,6 +49,7 @@ dependencies:
   json_annotation: ^4.8.1
   url_launcher: ^6.1.14
   shimmer: ^3.0.0
+  flutter_blue_plus: ^1.26.4
 
 dev_dependencies:
   flutter_test:
