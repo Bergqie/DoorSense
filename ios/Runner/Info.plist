@@ -27,6 +27,8 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
+	<key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
 	<string>Doorsense requires access to your camera to take photos or videos.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Doorsense requires access to the microphone to record audio file</string>
