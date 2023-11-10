@@ -58,53 +58,102 @@ class _GroupPageState extends State<GroupPage> {
     return users;
   }
 
+  // void getCurrentUserInformation() {
+  //   for (int i = 0; i < roomUsers.length; i++) {
+  //     //if the length is 1, then the current user is the only user in the room and is the admin
+  //     if (roomUsers.length == 1) {
+  //       setState(() {
+  //         isAdmin = true;
+  //         userName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
+  //         userEmail = roomUsers[i].email!;
+  //         userImageUrl = roomUsers[i].imageUrl!;
+  //         adminName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
+  //         adminEmail = roomUsers[i].email!;
+  //         adminImageUrl = roomUsers[i].imageUrl!;
+  //       });
+  //     } else if (roomUsers[i].id == FirebaseAuth.instance.currentUser!.uid) {
+  //
+  //       if (admins.contains(roomUsers[i].id)) {
+  //         setState(() {
+  //           userName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
+  //           userEmail = roomUsers[i].email!;
+  //           userImageUrl = roomUsers[i].imageUrl!;
+  //           isAdmin = true;
+  //           adminName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
+  //           adminEmail = roomUsers[i].email!;
+  //           adminImageUrl = roomUsers[i].imageUrl!;
+  //         });
+  //       }
+  //       else {
+  //         setState(() {
+  //           userName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
+  //           userEmail = roomUsers[i].email!;
+  //           userImageUrl = roomUsers[i].imageUrl!;
+  //         });
+  //       }
+  //       // Move the current user to the first position in the list
+  //       roomUsers.insert(0, roomUsers.removeAt(i));
+  //     }
+  //     //else if get the admin information
+  //     else if (admins.contains(roomUsers[i].id)) {
+  //       setState(() {
+  //         isAdmin = true;
+  //         adminName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
+  //         adminEmail = roomUsers[i].email!;
+  //         adminImageUrl = roomUsers[i].imageUrl!;
+  //       });
+  //     }
+  //   }
+  // }
+
   void getCurrentUserInformation() {
-    for (int i = 0; i < roomUsers.length; i++) {
+    for (int i = 0; i < widget.room.users.length; i++) {
       //if the length is 1, then the current user is the only user in the room and is the admin
-      if (roomUsers.length == 1) {
+      if (widget.room.users.length == 1) {
         setState(() {
           isAdmin = true;
-          userName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
-          userEmail = roomUsers[i].email!;
-          userImageUrl = roomUsers[i].imageUrl!;
-          adminName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
-          adminEmail = roomUsers[i].email!;
-          adminImageUrl = roomUsers[i].imageUrl!;
+          userName = "${widget.room.users[i].firstName} ${widget.room.users[i].lastName}";
+          userEmail = widget.room.users[i].email!;
+          userImageUrl = widget.room.users[i].imageUrl!;
+          adminName = "${widget.room.users[i].firstName} ${widget.room.users[i].lastName}";
+          adminEmail = widget.room.users[i].email!;
+          adminImageUrl = widget.room.users[i].imageUrl!;
         });
-      } else if (roomUsers[i].id == FirebaseAuth.instance.currentUser!.uid) {
+      } else if (widget.room.users[i].id == FirebaseAuth.instance.currentUser!.uid) {
 
-        if (admins.contains(roomUsers[i].id)) {
+        if (admins.contains(widget.room.users[i].id)) {
           setState(() {
-            userName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
-            userEmail = roomUsers[i].email!;
-            userImageUrl = roomUsers[i].imageUrl!;
+            userName = "${widget.room.users[i].firstName} ${widget.room.users[i].lastName}";
+            userEmail = widget.room.users[i].email!;
+            userImageUrl = widget.room.users[i].imageUrl!;
             isAdmin = true;
-            adminName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
-            adminEmail = roomUsers[i].email!;
-            adminImageUrl = roomUsers[i].imageUrl!;
+            adminName = "${widget.room.users[i].firstName} ${widget.room.users[i].lastName}";
+            adminEmail = widget.room.users[i].email!;
+            adminImageUrl = widget.room.users[i].imageUrl!;
           });
         }
         else {
           setState(() {
-            userName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
-            userEmail = roomUsers[i].email!;
-            userImageUrl = roomUsers[i].imageUrl!;
+            userName = "${widget.room.users[i].firstName} ${widget.room.users[i].lastName}";
+            userEmail = widget.room.users[i].email!;
+            userImageUrl = widget.room.users[i].imageUrl!;
           });
         }
         // Move the current user to the first position in the list
-        roomUsers.insert(0, roomUsers.removeAt(i));
+        widget.room.users.insert(0, widget.room.users.removeAt(i));
       }
       //else if get the admin information
-      else if (admins.contains(roomUsers[i].id)) {
+      else if (admins.contains(widget.room.users[i].id)) {
         setState(() {
           isAdmin = true;
-          adminName = "${roomUsers[i].firstName} ${roomUsers[i].lastName}";
-          adminEmail = roomUsers[i].email!;
-          adminImageUrl = roomUsers[i].imageUrl!;
+          adminName = "${widget.room.users[i].firstName} ${widget.room.users[i].lastName}";
+          adminEmail = widget.room.users[i].email!;
+          adminImageUrl = widget.room.users[i].imageUrl!;
         });
       }
     }
   }
+
 
   @override
   void initState() {
@@ -200,7 +249,7 @@ class _GroupPageState extends State<GroupPage> {
                                       context,
                                       MaterialPageRoute(
                                           builder: (context) =>
-                                              const RegisterFingerprintPage()));
+                                               RegisterFingerprintPage(room: widget.room,)));
                                 } else {
                                   // Handle delete action for other items
                                 }
@@ -228,7 +277,7 @@ class _GroupPageState extends State<GroupPage> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) =>
-                                    const RegisterFingerprintPage()));
+                                     RegisterFingerprintPage(room: widget.room,)));
                       },
                     ),
                   )),

@@ -1,5 +1,6 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:doorsense/pages/forgot_password_page.dart';
 import 'package:doorsense/pages/register_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -146,6 +147,26 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   minimumSize: const Size(240, 48),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+              ),
+              const SizedBox(height: 25),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.password_rounded),
+                label: const Text('Forgot Password?'),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.black,
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  minimumSize: const Size(200, 48),
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
               ),

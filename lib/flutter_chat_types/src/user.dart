@@ -23,7 +23,7 @@ abstract class User extends Equatable {
       this.role,
       this.updatedAt,
       this.dob,
-      this.fingerPrintHash,
+      this.fingerPrintHashList,
       this.email});
 
   const factory User(
@@ -37,7 +37,7 @@ abstract class User extends Equatable {
       Role? role,
       int? updatedAt,
       String? dob,
-      String? fingerPrintHash,
+      List<String>? fingerPrintHashList,
       String? email}) = _User;
 
   /// Creates user from a map (decoded JSON).
@@ -72,7 +72,7 @@ abstract class User extends Equatable {
 
   final String? dob;
 
-  final String? fingerPrintHash;
+  final List<String>? fingerPrintHashList;
 
   final String? email;
 
@@ -89,7 +89,7 @@ abstract class User extends Equatable {
         role,
         updatedAt,
         dob,
-        fingerPrintHash,
+    fingerPrintHashList,
         email
       ];
 
@@ -104,7 +104,7 @@ abstract class User extends Equatable {
       Role? role,
       int? updatedAt,
       String? dob,
-      String? fingerPrintHash,
+      List<String>? fingerPrintHashList,
       String? email});
 
   /// Converts user to the map representation, encodable to JSON.
@@ -124,7 +124,7 @@ class _User extends User {
       super.role,
       super.updatedAt,
       super.dob,
-      super.fingerPrintHash,
+      super.fingerPrintHashList,
       super.email})
       : super._();
 
@@ -140,7 +140,7 @@ class _User extends User {
           dynamic role = _Unset,
           dynamic updatedAt = _Unset,
           dynamic dob = _Unset,
-          dynamic fingerPrintHash = _Unset,
+          dynamic fingerPrintHashList = _Unset,
           dynamic email = _Unset}) =>
       _User(
           createdAt: createdAt == _Unset ? this.createdAt : createdAt as int?,
@@ -156,9 +156,9 @@ class _User extends User {
           role: role == _Unset ? this.role : role as Role?,
           updatedAt: updatedAt == _Unset ? this.updatedAt : updatedAt as int?,
           dob: dob == _Unset ? this.dob : dob as String,
-          fingerPrintHash: fingerPrintHash == _Unset
-              ? this.fingerPrintHash
-              : fingerPrintHash as String?,
+          fingerPrintHashList: fingerPrintHashList == _Unset
+              ? this.fingerPrintHashList
+              : fingerPrintHashList as List<String>?,
           email: email == _Unset ? this.email : email as String?);
 }
 

@@ -293,13 +293,14 @@ class FirebaseChatCore {
       'createdAt': FieldValue.serverTimestamp(),
       'dob': user.dob,
       'firstName': user.firstName,
-      'fingerPrintHash': user.fingerPrintHash,
+      'fingerPrintHash': user.fingerPrintHashList,
       'imageUrl': user.imageUrl,
       'lastName': user.lastName,
       'lastSeen': FieldValue.serverTimestamp(),
       'metadata': user.metadata,
       'role': user.role?.toShortString(),
       'updatedAt': FieldValue.serverTimestamp(),
+      'email': user.email
     });
   }
 

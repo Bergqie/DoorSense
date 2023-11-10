@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:doorsense/flutter_chat_core/flutter_firebase_chat_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:doorsense/flutter_chat_types/flutter_chat_types.dart' as types;
 
 class ActivityFeedItem extends StatefulWidget {
   final snap;
@@ -111,6 +113,7 @@ class _ActivityFeedItemState extends State<ActivityFeedItem> {
       if (roomSnapshot.data()['groupCode'] == groupCode) {
         roomSnapshot.reference.update({
           'userIds': FieldValue.arrayUnion([widget.snap['userId']]),
+          'userRoles': {widget.snap['userId']: types.Role.user.toShortString()},
         });
       }
     }
