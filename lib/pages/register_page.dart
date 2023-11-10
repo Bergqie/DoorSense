@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -28,16 +30,53 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   DateTime selectedDate = DateTime.now();
 
+  String errorText = '';
+
   //a method that checks if all the information is valid. The selected date must be 18 years old starting from the current date
   bool isValid() {
-    if (firstNameController.text.isEmpty ||
-        lastNameController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        selectedImage == null ||
-        selectedDate
-            .isAfter(DateTime.now().subtract(const Duration(days: 18 * 365)))) {
+
+    if(firstNameController.text.isEmpty){
+      setState(() {
+        errorText = 'Please enter your first name';
+      });
       return false;
+    }
+    else if(lastNameController.text.isEmpty){
+      setState(() {
+        errorText = 'Please enter your last name';
+      });
+      return false;
+    }
+    else if (emailController.text.isEmpty) {
+      setState(() {
+        errorText = 'Please enter your email';
+      });
+      return false;
+    }
+    else if (passwordController.text.isEmpty) {
+      setState(() {
+        errorText = 'Please enter your password';
+      });
+      return false;
+    }
+
+    else if (selectedImage != null) {
+      setState(() {
+        errorText = 'Please select an image';
+      });
+      return false;
+    }
+
+    else if (selectedDate
+        .isAfter(DateTime.now().subtract(const Duration(days: 18 * 365)))) {
+      setState(() {
+        errorText = 'You must be 18 years old to register';
+      });
+      return false;
+    } else {
+      setState(() {
+        errorText = '';
+      });
     }
     return true;
   }
@@ -109,8 +148,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           builder: (BuildContext context) {
             return AlertDialog(
               title: const Text('Invalid Information'),
-              content: const Text(
-                  'Please make sure you enter in all the information correctly'),
+              content: Text(errorText),
               actions: <Widget>[
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
