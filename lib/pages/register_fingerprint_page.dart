@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:doorsense/flutter_chat_types/flutter_chat_types.dart' as types;
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'dart:io';
 
 class RegisterFingerprintPage extends StatefulWidget {
   final types.Room room;
@@ -16,6 +18,95 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
   String username = '';
   String userImageUrl = '';
   List<String> fingerPrintHashList = [];
+
+  Color connectionColor = Colors.transparent;
+
+  BluetoothDevice? doorSenseDevice;
+  Set<DeviceIdentifier> seen = {};
+
+  String deviceName = '';
+
+  void setupBluetooth() async {
+    // first, check if bluetooth is supported by your hardware
+// Note: The platform is initialized on the first call to any FlutterBluePlus method.
+    if (await FlutterBluePlus.isSupported == false) {
+      print("Bluetooth not supported by this device");
+      return;
+    }
+
+    // turn on bluetooth ourself if we can
+// for iOS, the user controls bluetooth enable/disable
+    if (Platform.isAndroid) {
+      await FlutterBluePlus.turnOn();
+    }
+  }
+
+  Future<void> scanForBluetooth() async {
+    // Note: You must call discoverServices after every connection!
+    // Setup Listener for scan results.
+// device not found? see "Common Problems" in the README
+    Set<DeviceIdentifier> seen = {};
+    var subscription = FlutterBluePlus.scanResults.listen(
+      (results) {
+        for (ScanResult r in results) {
+          if (seen.contains(r.device.remoteId) == false) {
+            print(
+                '${r.device.remoteId}: "${r.device.platformName}" found! rssi: ${r.rssi}');
+            seen.add(r.device.remoteId);
+          }
+        }
+      },
+    );
+
+// Start scanning
+// Note: You should always call `scanResults.listen` before you call startScan!
+    await FlutterBluePlus.startScan();
+  }
+
+  void connectToDevice() async {
+    // handle bluetooth on & off
+// note: for iOS the initial state is typically BluetoothAdapterState.unknown
+// note: if you have permissions issues you will get stuck at BluetoothAdapterState.unauthorized
+    FlutterBluePlus.adapterState.listen((BluetoothAdapterState state) async {
+      print(state);
+      if (state == BluetoothAdapterState.on) {
+        //look for bluetooth with charateristic UUID 19B10000-E8F2-537E-4F6C-D104768A1214
+        try {
+          // Start scanning for devices
+          FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
+
+          // Listen for scanned devices
+          FlutterBluePlus.scanResults.listen((scanResult) {
+            for (var result in scanResult) {
+              if (result.device.platformName == 'Doorsense') {
+                // Found the DoorSense device
+                doorSenseDevice = result.device;
+                print("DoorSense found!!!");
+                FlutterBluePlus.stopScan();
+                if (doorSenseDevice != null) {
+                  setState(() {
+                    deviceName = doorSenseDevice!.platformName;
+                  });
+                  print(doorSenseDevice!.platformName);
+                }
+                break;
+              }
+            }
+          });
+        } catch (e) {
+          // Handle any errors that occur during the process
+          print('Error: $e');
+        } finally {
+         // await doorSenseDevice!.connect();
+
+        //  print("DoorSense successfully connected!!!");
+        }
+      } else {
+        // show an error to the user, etc
+        print("An error occurred");
+      }
+    });
+  }
 
   Future<void> getUserInformation() async {
     final userRef = FirebaseFirestore.instance
@@ -37,6 +128,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
   void initState() {
     super.initState();
     getUserInfo();
+    setupBluetooth();
   }
 
   @override
@@ -49,9 +141,17 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: connectionColor,
         title: const Text('Fingerprints'),
         centerTitle: true,
+        actions: [
+          IconButton(
+              onPressed: () {
+             //   connectToDevice();
+                scanForBluetooth();
+              },
+              icon: const Icon(Icons.bluetooth_rounded))
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -91,8 +191,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                           icon: const Icon(Icons.add_circle_rounded))
                     ],
                   );
-                }
-                else {
+                } else {
                   return ListTile(
                     leading: const AspectRatio(
                       aspectRatio: 1,
@@ -106,8 +205,8 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                           context: context,
                           builder: (BuildContext context) {
                             return AlertDialog(
-                              title: const Text(
-                                  'Delete Registered Fingerprint?'),
+                              title:
+                                  const Text('Delete Registered Fingerprint?'),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.of(context).pop(),
@@ -127,7 +226,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                                   },
                                   style: ButtonStyle(
                                     backgroundColor:
-                                    MaterialStateProperty.all(Colors.white),
+                                        MaterialStateProperty.all(Colors.white),
                                   ),
                                   child: const Text(
                                     'Remove',
@@ -146,10 +245,18 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                 }
               },
             )),
-            const Padding(
-              padding: EdgeInsets.only(bottom: 20.0),
-              child: Icon(Icons.fingerprint, size: 100),
-            ),
+            GestureDetector(
+                onTap: () {
+                  //TODO: Register new fingerprint process
+                },
+                child: const Stack(children: [
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 20.0),
+                    child: Icon(Icons.fingerprint, size: 100),
+                  ),
+                  Positioned(
+                      top: 0, right: 0, child: Icon(Icons.add_circle_rounded))
+                ])),
           ],
         ),
       ),

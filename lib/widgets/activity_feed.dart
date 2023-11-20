@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:doorsense/flutter_chat_types/flutter_chat_types.dart' as types;
+import 'package:swipe_to/swipe_to.dart';
 
 class ActivityFeedItem extends StatefulWidget {
   final snap;
@@ -18,6 +19,27 @@ class ActivityFeedItem extends StatefulWidget {
 class _ActivityFeedItemState extends State<ActivityFeedItem> {
   String _username = '';
   String _photoUrl = '';
+
+  //Delete notification
+  Future<String> deleteNotification(String feedItemId) async {
+    String res = "Some error occurred";
+    try {
+      await FirebaseFirestore.instance
+          .collection('feed')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .collection('feedList')
+          .doc(feedItemId)
+          .delete();
+      res = 'success';
+    } catch (err) {
+      res = err.toString();
+    }
+    return res;
+  }
+
+  void _deleteNotification(String feedItemId) async {
+    await deleteNotification(feedItemId);
+  }
 
   String formatTimestamp(DateTime timestamp) {
     final now = DateTime.now();
@@ -49,7 +71,8 @@ class _ActivityFeedItemState extends State<ActivityFeedItem> {
             children: [
               IconButton(
                   onPressed: () {
-                    acceptGroupCodeRequest(widget.snap['userId'], widget.snap['groupCode']);
+                    acceptGroupCodeRequest(
+                        widget.snap['userId'], widget.snap['groupCode']);
                   },
                   icon: const Icon(
                     Icons.check_circle_rounded,
@@ -105,7 +128,6 @@ class _ActivityFeedItemState extends State<ActivityFeedItem> {
   }
 
   void acceptGroupCodeRequest(String userId, String groupCode) async {
-
     final roomRef = FirebaseFirestore.instance.collection('rooms');
     final roomQuery = await roomRef.get();
 
@@ -149,10 +171,13 @@ class _ActivityFeedItemState extends State<ActivityFeedItem> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 2.0),
-      child: ListTile(
-        title: GestureDetector(
-          onTap: () {},
-          child: RichText(
+      child: SwipeTo(
+        iconOnRightSwipe: Icons.delete_forever_rounded,
+        onRightSwipe: () {
+          _deleteNotification(widget.feedItemId);
+        },
+        child: ListTile(
+          title: RichText(
             overflow: TextOverflow.ellipsis,
             text: TextSpan(
                 style: const TextStyle(
@@ -168,16 +193,16 @@ class _ActivityFeedItemState extends State<ActivityFeedItem> {
                   )
                 ]),
           ),
+          leading: CircleAvatar(
+            backgroundImage: NetworkImage(_photoUrl),
+            radius: 16,
+          ),
+          subtitle: Text(
+            formatTimestamp(DateTime.parse(widget.snap['date'])),
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: preview,
         ),
-        leading: CircleAvatar(
-          backgroundImage: NetworkImage(_photoUrl),
-          radius: 16,
-        ),
-        subtitle: Text(
-          formatTimestamp(DateTime.parse(widget.snap['date'])),
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: preview,
       ),
     );
   }
