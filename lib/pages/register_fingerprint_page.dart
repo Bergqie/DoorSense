@@ -301,8 +301,6 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
             )),
             GestureDetector(
                 onTap: () {
-                  //TODO: Register new fingerprint process
-
                    if (doorSenseDevice == null) {
                       _showError(context, "Please connect to Doorsense Device via Bluetooth!");
                    }
@@ -310,6 +308,17 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                      writeData(
                          0x04); //switch to the enrolling state for the hardware
                      _registerFingerprint(context);
+
+                     //check if the read data is 0x01 then show the place finger again dialog
+                      //if the read data is 0x02 then show the success dialog
+                      readIncomingData();
+                      if (readData[0] == 0x01) {
+                        _placeFingerprintAgain(context);
+                      }
+                      else if (readData[0] == 0x02) {
+                        _successFingerprintEnroll(context);
+                      }
+
                    }
                 },
                 child: const Stack(children: [
