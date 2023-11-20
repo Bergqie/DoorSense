@@ -26,6 +26,8 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
 
   String deviceName = '';
 
+  List<int> readData = [];
+
   void setupBluetooth() async {
     // first, check if bluetooth is supported by your hardware
 // Note: The platform is initialized on the first call to any FlutterBluePlus method.
@@ -136,17 +138,31 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
     await getUserInformation();
   }
 
-  void writeData() async {
+  void writeData(int data) async {
    List<BluetoothService> services = await doorSenseDevice!.discoverServices();
    services.forEach((element) async {
      var characteristics = element.characteristics;
      for (BluetoothCharacteristic c in characteristics) {
        if (c.properties.write) {
-         await c.write([0x00]);
+         await c.write([data]);
          print("Wrote data successfully!");
        }
      }
    });
+  }
+
+  void readIncomingData() async {
+    List<BluetoothService> services = await doorSenseDevice!.discoverServices();
+    services.forEach((element) async {
+      var characteristics = element.characteristics;
+      for (BluetoothCharacteristic c in characteristics) {
+        if (c.properties.read) {
+          readData = await c.read();
+          print("Read data successfully!");
+          print(readData);
+        }
+      }
+    });
   }
 
   @override
@@ -272,7 +288,18 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
             GestureDetector(
                 onTap: () {
                   //TODO: Register new fingerprint process
-                    writeData();
+                   writeData(0x04); //switch to the enrolling state for the hardware
+                   if (readData[0] == 1) {
+                     Navigator.of(context).pop();
+                     _placeFingerprintAgain(context);
+                   }
+                   if(readData[1] == 2)  {
+                     Navigator.of(context).pop();
+                     _successFingerprintEnroll(context);
+                   }
+                   else {
+                     _registerFingerprint(context);
+                   }
                 },
                 child: const Stack(children: [
                   Padding(
@@ -285,6 +312,46 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
           ],
         ),
       ),
+    );
+  }
+
+
+  Future<void> _registerFingerprint(BuildContext context) {
+    String text = "Place your finger on the fingerprint sensor";
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add Fingerprint'),
+          content: Text(text),
+        );
+      },
+    );
+  }
+
+  Future<void> _placeFingerprintAgain(BuildContext context) {
+    String text = "Remove your finger and place it again.";
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add Fingerprint'),
+          content: Text(text),
+        );
+      },
+    );
+  }
+
+  Future<void> _successFingerprintEnroll(BuildContext context) {
+    String text = "Fingerprint enrolled successfully!";
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Success!'),
+          content: Text(text),
+        );
+      },
     );
   }
 }
