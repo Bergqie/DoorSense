@@ -64,21 +64,33 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
   }
 
   void connectToDevice() async {
+    await doorSenseDevice!.connect();
+
+    print("DoorSense successfully connected!!!");
+    setState(() {
+    connectionColor = Colors.green;
+    });
+  }
+
+  void searchForDevice() {
     // handle bluetooth on & off
 // note: for iOS the initial state is typically BluetoothAdapterState.unknown
 // note: if you have permissions issues you will get stuck at BluetoothAdapterState.unauthorized
-    FlutterBluePlus.adapterState.listen((BluetoothAdapterState state) async {
+    FlutterBluePlus.adapterState.listen((BluetoothAdapterState state) {
       print(state);
       if (state == BluetoothAdapterState.on) {
         //look for bluetooth with charateristic UUID 19B10000-E8F2-537E-4F6C-D104768A1214
+        print("Scanning");
         try {
           // Start scanning for devices
           FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
 
+          print("Searching for Doorsense...");
+
           // Listen for scanned devices
           FlutterBluePlus.scanResults.listen((scanResult) {
             for (var result in scanResult) {
-              if (result.device.platformName == 'Doorsense') {
+              if (result.device.platformName == 'Doorsense' || result.device.platformName == 'Arduino') {
                 // Found the DoorSense device
                 doorSenseDevice = result.device;
                 print("DoorSense found!!!");
@@ -87,7 +99,8 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                   setState(() {
                     deviceName = doorSenseDevice!.platformName;
                   });
-                  print(doorSenseDevice!.platformName);
+                  print(deviceName);
+
                 }
                 break;
               }
@@ -96,10 +109,9 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
         } catch (e) {
           // Handle any errors that occur during the process
           print('Error: $e');
-        } finally {
-         // await doorSenseDevice!.connect();
-
-        //  print("DoorSense successfully connected!!!");
+        }
+        finally {
+          connectToDevice();
         }
       } else {
         // show an error to the user, etc
@@ -122,6 +134,19 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
 
   void getUserInfo() async {
     await getUserInformation();
+  }
+
+  void writeData() async {
+   List<BluetoothService> services = await doorSenseDevice!.discoverServices();
+   services.forEach((element) async {
+     var characteristics = element.characteristics;
+     for (BluetoothCharacteristic c in characteristics) {
+       if (c.properties.write) {
+         await c.write([0x00]);
+         print("Wrote data successfully!");
+       }
+     }
+   });
   }
 
   @override
@@ -147,8 +172,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
         actions: [
           IconButton(
               onPressed: () {
-             //   connectToDevice();
-                scanForBluetooth();
+                searchForDevice();
               },
               icon: const Icon(Icons.bluetooth_rounded))
         ],
@@ -248,6 +272,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
             GestureDetector(
                 onTap: () {
                   //TODO: Register new fingerprint process
+                    writeData();
                 },
                 child: const Stack(children: [
                   Padding(

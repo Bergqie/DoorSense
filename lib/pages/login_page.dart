@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doorsense/pages/forgot_password_page.dart';
 import 'package:doorsense/pages/register_page.dart';
@@ -44,77 +43,45 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Container(
-        height: MediaQuery
-            .of(context)
-            .size
-            .height,
-        width: MediaQuery.of(context).size.width,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.black26, Colors.blue[800] as Color],
-          ),
-        ),
+      body: SingleChildScrollView(
         child: Container(
-          padding: const EdgeInsets.only(top: 80, left: 24, right: 24),
-          child: Column(
-            children: [
-              const Text(
-                'Login with Registered Email',
-                style: TextStyle(
-                  fontSize: 25,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 25,),
-              TextField(
-                autocorrect: false,
-                autofillHints: _loggingIn ? null : [AutofillHints.email],
-                autofocus: true,
-                controller: _usernameController,
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(8),
-                    ),
-                  ),
-                  labelText: 'Email',
-                  focusColor: Colors.purple,
-                  enabledBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(8),
-                    ),
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.cancel),
-                    onPressed: () => _usernameController?.clear(),
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.black26, Colors.blue[800] as Color],
+            ),
+          ),
+          child: Container(
+            padding: const EdgeInsets.only(top: 80, left: 24, right: 24),
+            child: Column(
+              children: [
+                const Text(
+                  'Login with Registered Email',
+                  style: TextStyle(
+                    fontSize: 25,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                keyboardType: TextInputType.emailAddress,
-                onEditingComplete: () {
-                  _focusNode?.requestFocus();
-                },
-                readOnly: _loggingIn,
-                textCapitalization: TextCapitalization.none,
-                textInputAction: TextInputAction.next,
-              ),
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                child: TextField(
+                const SizedBox(
+                  height: 25,
+                ),
+                TextField(
                   autocorrect: false,
-                  autofillHints: _loggingIn ? null : [AutofillHints.password],
-                  controller: _passwordController,
+                  autofillHints: _loggingIn ? null : [AutofillHints.email],
+                  autofocus: true,
+                  controller: _usernameController,
                   decoration: InputDecoration(
                     border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(
                         Radius.circular(8),
                       ),
                     ),
-                    labelText: 'Password',
+                    labelText: 'Email',
+                    focusColor: Colors.purple,
                     enabledBorder: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(
                         Radius.circular(8),
@@ -123,83 +90,120 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.cancel),
-                      onPressed: () => _passwordController?.clear(),
+                      onPressed: () => _usernameController?.clear(),
                     ),
                   ),
-                  focusNode: _focusNode,
                   keyboardType: TextInputType.emailAddress,
-                  obscureText: true,
-                  onEditingComplete: _login,
+                  onEditingComplete: () {
+                    _focusNode?.requestFocus();
+                  },
+                  readOnly: _loggingIn,
                   textCapitalization: TextCapitalization.none,
-                  textInputAction: TextInputAction.done,
+                  textInputAction: TextInputAction.next,
                 ),
-              ),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.email_rounded),
-                label: const Text('Login'),
-                onPressed: () {
-                  _loggingIn ? null : _login();
-                },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: TextField(
+                    autocorrect: false,
+                    autofillHints: _loggingIn ? null : [AutofillHints.password],
+                    controller: _passwordController,
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(8),
+                        ),
+                      ),
+                      labelText: 'Password',
+                      enabledBorder: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(8),
+                        ),
+                        borderSide: BorderSide(color: Colors.white),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.cancel),
+                        onPressed: () => _passwordController?.clear(),
+                      ),
+                    ),
+                    focusNode: _focusNode,
+                    keyboardType: TextInputType.emailAddress,
+                    obscureText: true,
+                    onEditingComplete: _login,
+                    textCapitalization: TextCapitalization.none,
+                    textInputAction: TextInputAction.done,
                   ),
-                  minimumSize: const Size(240, 48),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
-              ),
-              const SizedBox(height: 25),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.password_rounded),
-                label: const Text('Forgot Password?'),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.email_rounded),
+                  label: const Text('Login'),
+                  onPressed: () {
+                    _loggingIn ? null : _login();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.black,
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    minimumSize: const Size(240, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
-                  minimumSize: const Size(200, 48),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
-              ),
-              const SizedBox(height: 25),
-              const Text(
-                'Don\'t have an account?',
-                style: TextStyle(
-                  fontSize: 25,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 25,),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.app_registration),
-                label: const Text('Register Here'),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => RegistrationPage()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                const SizedBox(height: 25),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.password_rounded),
+                  label: const Text('Forgot Password?'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ForgotPasswordPage()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.black,
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    minimumSize: const Size(200, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
-                  minimumSize: const Size(240, 48),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
-              ),
-            ],
+                const SizedBox(height: 25),
+                const Text(
+                  'Don\'t have an account?',
+                  style: TextStyle(
+                    fontSize: 25,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(
+                  height: 25,
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.app_registration),
+                  label: const Text('Register Here'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => RegistrationPage()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.black,
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    minimumSize: const Size(240, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -219,7 +223,7 @@ class _LoginPageState extends State<LoginPage> {
         password: _passwordController!.text,
       );
       final userRef =
-      FirebaseFirestore.instance.collection('users').doc(user.user!.uid);
+          FirebaseFirestore.instance.collection('users').doc(user.user!.uid);
       userRef.update({
         'lastSeen': DateTime.now(),
       });
@@ -259,7 +263,7 @@ class _LoginPageState extends State<LoginPage> {
 
     // Obtain the auth details from the request
     final GoogleSignInAuthentication? googleAuth =
-    await googleUser?.authentication;
+        await googleUser?.authentication;
 
     // Create a new credential
     final credential = GoogleAuthProvider.credential(
@@ -270,7 +274,7 @@ class _LoginPageState extends State<LoginPage> {
     //create a new user in the database
     final user = await FirebaseAuth.instance.signInWithCredential(credential);
     final userRef =
-    FirebaseFirestore.instance.collection('users').doc(user.user!.uid);
+        FirebaseFirestore.instance.collection('users').doc(user.user!.uid);
     final userDoc = await userRef.get();
     if (!userDoc.exists) {
       await FirebaseChatCore.instance.createUserInFirestore(
@@ -283,7 +287,6 @@ class _LoginPageState extends State<LoginPage> {
       );
       user.user!.sendEmailVerification();
     } else {
-
       userRef.update({
         'lastSeen': DateTime.now(),
       });
