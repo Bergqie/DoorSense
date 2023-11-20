@@ -74,6 +74,15 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
     });
   }
 
+  void disconnectDevice() async {
+    await doorSenseDevice!.disconnect();
+
+    print("Doorsense successfully disconnected");
+    setState(() {
+      connectionColor = Colors.transparent;
+    });
+  }
+
   void searchForDevice() {
     // handle bluetooth on & off
 // note: for iOS the initial state is typically BluetoothAdapterState.unknown
@@ -188,7 +197,12 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
         actions: [
           IconButton(
               onPressed: () {
-                searchForDevice();
+                if (!doorSenseDevice!.isConnected) {
+                  searchForDevice();
+                }
+                else {
+                  disconnectDevice();
+                }
               },
               icon: const Icon(Icons.bluetooth_rounded))
         ],
@@ -288,16 +302,13 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
             GestureDetector(
                 onTap: () {
                   //TODO: Register new fingerprint process
-                   writeData(0x04); //switch to the enrolling state for the hardware
-                   if (readData[0] == 1) {
-                     Navigator.of(context).pop();
-                     _placeFingerprintAgain(context);
-                   }
-                   if(readData[1] == 2)  {
-                     Navigator.of(context).pop();
-                     _successFingerprintEnroll(context);
+
+                   if (doorSenseDevice == null) {
+                      _showError(context, "Please connect to Doorsense Device via Bluetooth!");
                    }
                    else {
+                     writeData(
+                         0x04); //switch to the enrolling state for the hardware
                      _registerFingerprint(context);
                    }
                 },
@@ -314,6 +325,24 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
       ),
     );
   }
+
+  Future<void> _showError(BuildContext context, String error) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text(error),
+          actions: [
+            TextButton(onPressed: () {
+              Navigator.of(context).pop();
+            }, child: const Text("OK!"))
+          ],
+        );
+      },
+    );
+  }
+
 
 
   Future<void> _registerFingerprint(BuildContext context) {
