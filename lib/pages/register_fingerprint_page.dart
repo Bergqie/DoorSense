@@ -178,15 +178,14 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
     });
   }
 
-  Future<void> streamBluetoothData() async {
+  Stream<List<int>> streamBluetoothData() async* {
     List<BluetoothService> services = await doorSenseDevice!.discoverServices();
-    services.forEach((element) async {
+    for (BluetoothService element in services) {
       var characteristics = element.characteristics;
       for (BluetoothCharacteristic c in characteristics) {
-
-        return c.lastValueStream;
+        yield* c.lastValueStream;
       }
-    });
+    }
   }
 
   @override
@@ -314,6 +313,22 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                 }
               },
             )),
+          StreamBuilder<List<int>>(
+            stream: streamBluetoothData(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Text('Waiting for data...');
+              }
+
+              // Use the data from the Bluetooth stream here
+              List<int>? bluetoothData = snapshot.data;
+              return Text('Bluetooth Data: ${bluetoothData.toString()}');
+            },
+          ),
             GestureDetector(
                 onTap: () {
                    if (doorSenseDevice == null) {
@@ -324,9 +339,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                          0x04); //switch to the enrolling state for the hardware
                      _registerFingerprint(context);
 
-                     //check if the read data is 0x01 then show the place finger again dialog
-                      //if the read data is 0x02 then show the success dialog
-                      readIncomingData();
+
 
                    }
                 },
@@ -370,7 +383,22 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add Fingerprint'),
-          content: Text(text),
+          content: StreamBuilder<List<int>>(
+            stream: streamBluetoothData(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Text('Waiting for data...');
+              }
+
+              // Use the data from the Bluetooth stream here
+              List<int>? bluetoothData = snapshot.data;
+              return Text('Bluetooth Data: ${bluetoothData.toString()}');
+            },
+          ),
         );
       },
     );
