@@ -36,7 +36,8 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
   Timer? periodicTimer;
 
   void startReadingDataPeriodically() {
-    const Duration interval = Duration(seconds: 5); // adjust the interval as needed
+    const Duration interval =
+        Duration(seconds: 5); // adjust the interval as needed
 
     writeData(0x04);
     _registerFingerprint(context);
@@ -50,7 +51,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
           readIncomingData();
         }
       });
-    } catch(e) {
+    } catch (e) {
       print(e);
       periodicTimer?.cancel();
     }
@@ -98,7 +99,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
 
     print("DoorSense successfully connected!!!");
     setState(() {
-    connectionColor = Colors.green;
+      connectionColor = Colors.green;
     });
   }
 
@@ -131,7 +132,8 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
           // Listen for scanned devices
           FlutterBluePlus.scanResults.listen((scanResult) {
             for (var result in scanResult) {
-              if (result.device.platformName == 'Doorsense' || result.device.platformName == 'Arduino') {
+              if (result.device.platformName == 'Doorsense' ||
+                  result.device.platformName == 'Arduino') {
                 // Found the DoorSense device
                 doorSenseDevice = result.device;
                 print("DoorSense found!!!");
@@ -141,7 +143,6 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                     deviceName = doorSenseDevice!.platformName;
                   });
                   print(deviceName);
-
                 }
                 break;
               }
@@ -150,8 +151,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
         } catch (e) {
           // Handle any errors that occur during the process
           print('Error: $e');
-        }
-        finally {
+        } finally {
           connectToDevice();
         }
       } else {
@@ -178,20 +178,19 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
   }
 
   void writeData(int data) async {
-   List<BluetoothService> services = await doorSenseDevice!.discoverServices();
-   services.forEach((element) async {
-     var characteristics = element.characteristics;
-     for (BluetoothCharacteristic c in characteristics) {
-       if (c.properties.write) {
-         await c.write([data]);
-         print("Wrote data successfully!");
-       }
-     }
-   });
+    List<BluetoothService> services = await doorSenseDevice!.discoverServices();
+    services.forEach((element) async {
+      var characteristics = element.characteristics;
+      for (BluetoothCharacteristic c in characteristics) {
+        if (c.properties.write) {
+          await c.write([data]);
+          print("Wrote data successfully!");
+        }
+      }
+    });
   }
 
   late Stream<List<int>> incomingDataStream;
-
 
   String bytesToString(List<int> bytes) {
     // Decode the bytes using utf8 encoding
@@ -203,29 +202,25 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
     List<BluetoothService> services = await doorSenseDevice!.discoverServices();
     for (BluetoothService service in services) {
       // Replace with the UUID of your service
-      if (service.uuid == Guid(
-          '19B10000-E8F2-537E-4F6C-D104768A1214')) {
-        for (BluetoothCharacteristic characteristic in service
-            .characteristics) {
+      if (service.uuid == Guid('19B10000-E8F2-537E-4F6C-D104768A1214')) {
+        for (BluetoothCharacteristic characteristic
+            in service.characteristics) {
           // Replace with the UUID of your characteristic
-          if (characteristic.uuid == Guid(
-              '19B10002-E8F2-537E-4F6C-D104768A1214')) {
-            List<int> value = await characteristic
-                .read();
-            print(value);
-            print(bytesToString(value));
+          if (characteristic.uuid ==
+              Guid('19B10002-E8F2-537E-4F6C-D104768A1214')) {
+            List<int> value = await characteristic.read();
 
             if (value[0] == 82) {
               setState(() {
-                readData = "Remove your finger then place it again on the fingerprint sensor.";
+                readData =
+                    "Remove your finger then place it again on the fingerprint sensor.";
               });
-              print("Remove state");
-            }
-            else if (value[0] == 83) {
+              print("WORK");
+            } else if (value[0] == 83) {
               setState(() {
                 readData = "Fingerprint enrolled successfully!";
               });
-              print("Success state");
+              print("PLEASE");
             }
 
             break;
@@ -238,10 +233,12 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
 
   Stream<List<int>> streamBluetoothData() async* {
     List<BluetoothService> services = await doorSenseDevice!.discoverServices();
-    for(BluetoothService service in services) {
+    for (BluetoothService service in services) {
       if (service.uuid == Guid('19B10000-E8F2-537E-4F6C-D104768A1214')) {
-        for (BluetoothCharacteristic characteristic in service.characteristics) {
-          if (characteristic.uuid == Guid('19B10002-E8F2-537E-4F6C-D104768A1214')) {
+        for (BluetoothCharacteristic characteristic
+            in service.characteristics) {
+          if (characteristic.uuid ==
+              Guid('19B10002-E8F2-537E-4F6C-D104768A1214')) {
             List<int> value = await characteristic.read();
             // if (bytesToString(value) == 'Remove') {
             //   readData = 'Remove your finger and place it again.';
@@ -278,12 +275,12 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
         actions: [
           IconButton(
               onPressed: () {
-               // if (!doorSenseDevice!.isConnected || doorSenseDevice == null) {
-                  searchForDevice();
-               // }
-               // else {
+                // if (!doorSenseDevice!.isConnected || doorSenseDevice == null) {
+                searchForDevice();
+                // }
+                // else {
                 //  disconnectDevice();
-               // }
+                // }
               },
               icon: const Icon(Icons.bluetooth_rounded))
         ],
@@ -383,7 +380,8 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
             GestureDetector(
                 onTap: () {
                   if (doorSenseDevice == null) {
-                    _showError(context, "Please connect to Doorsense Device via Bluetooth!");
+                    _showError(context,
+                        "Please connect to Doorsense Device via Bluetooth!");
                   } else {
                     startReadingDataPeriodically();
                   }
@@ -410,27 +408,39 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
           title: const Text('Error'),
           content: Text(error),
           actions: [
-            TextButton(onPressed: () {
-              Navigator.of(context).pop();
-            }, child: const Text("OK!"))
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text("OK!"))
           ],
         );
       },
     );
   }
 
-
-
   Future<void> _registerFingerprint(BuildContext context) {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add Fingerprint'),
-          content: StatefulBuilder(builder: (BuildContext context, StateSetter state) {
-            return Text(readData);
-          }),
-        );
+        return StatefulBuilder(
+            builder: (BuildContext context, StateSetter state) {
+          return AlertDialog(
+            title: const Text('Add Fingerprint'),
+            content: StatefulBuilder(
+                builder: (BuildContext context, StateSetter state) {
+              return Text(readData);
+            }),
+            actions: [
+              if (readData.contains('successfully'))
+                TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("OK!"))
+            ],
+          );
+        });
       },
     );
   }
