@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -31,6 +32,19 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
   String readData = 'Place your finger on the fingerprint sensor.';
 
   bool isRegistering = false;
+
+  void startReadingDataPeriodically() {
+    const Duration interval = Duration(seconds: 5); // adjust the interval as needed
+
+    Timer.periodic(interval, (Timer timer) {
+      if (doorSenseDevice == null) {
+        _showError(context, "Please connect to Doorsense Device via Bluetooth!");
+      } else {
+        readIncomingData();
+        _registerFingerprint(context);
+      }
+    });
+  }
 
   void setupBluetooth() async {
     // first, check if bluetooth is supported by your hardware
@@ -343,14 +357,11 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
             )),
             GestureDetector(
                 onTap: () {
-                   if (doorSenseDevice == null) {
-                      _showError(context, "Please connect to Doorsense Device via Bluetooth!");
-                   }
-                   else {
-                   // writeData(0x04); //switch to the enrolling state for the hardware
-                     readIncomingData();
-                     _registerFingerprint(context);
-                   }
+                  if (doorSenseDevice == null) {
+                    _showError(context, "Please connect to Doorsense Device via Bluetooth!");
+                  } else {
+                    startReadingDataPeriodically();
+                  }
                 },
                 child: const Stack(children: [
                   Padding(
