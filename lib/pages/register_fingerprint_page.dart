@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -160,18 +162,44 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
    });
   }
 
+  late Stream<List<int>> incomingDataStream;
+
+
+  String bytesToString(List<int> bytes) {
+    // Decode the bytes using utf8 encoding
+    String result = utf8.decode(bytes);
+    return result;
+  }
+
   void readIncomingData() async {
     List<BluetoothService> services = await doorSenseDevice!.discoverServices();
-    services.forEach((element) async {
-      var characteristics = element.characteristics;
-      for (BluetoothCharacteristic c in characteristics) {
-        if (c.properties.read) {
-          readData = await c.read();
-          print("Read data successfully!");
-          print(readData);
+    for (BluetoothService service in services) {
+      // Replace with the UUID of your service
+      if (service.uuid == Guid(
+          '19B10000-E8F2-537E-4F6C-D104768A1214')) {
+        print(service.uuid);
+        for (BluetoothCharacteristic characteristic in service
+            .characteristics) {
+          // Replace with the UUID of your characteristic
+          if (characteristic.uuid == Guid(
+              '19B10001-E8F2-537E-4F6C-D104768A1214')) {
+            // List<int> value = await characteristic
+            //     .read();
+            // print(bytesToString(value));
+            // Create a stream for incoming data
+            incomingDataStream = characteristic.lastValueStream;
+
+            // Start listening to the stream
+            incomingDataStream.listen((List<int> value) {
+              print("Received data: ${bytesToString(value)}");
+              // Handle the incoming data here
+            });
+            break;
+          }
         }
+        break;
       }
-    });
+    }
   }
 
   Stream<List<int>> streamBluetoothData() async* {
