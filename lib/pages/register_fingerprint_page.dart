@@ -28,7 +28,9 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
 
   String deviceName = '';
 
-  List<int> readData = [];
+  String readData = 'Place your finger on the fingerprint sensor.';
+
+  bool isRegistering = false;
 
   void setupBluetooth() async {
     // first, check if bluetooth is supported by your hardware
@@ -77,12 +79,14 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
   }
 
   void disconnectDevice() async {
-    await doorSenseDevice!.disconnect();
+    if (doorSenseDevice!.isConnected) {
+      await doorSenseDevice!.disconnect();
 
-    print("Doorsense successfully disconnected");
-    setState(() {
-      connectionColor = Colors.transparent;
-    });
+      print("Doorsense successfully disconnected");
+      // setState(() {
+      //   connectionColor = Colors.transparent;
+      // });
+    }
   }
 
   void searchForDevice() {
@@ -177,23 +181,15 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
       // Replace with the UUID of your service
       if (service.uuid == Guid(
           '19B10000-E8F2-537E-4F6C-D104768A1214')) {
-        print(service.uuid);
         for (BluetoothCharacteristic characteristic in service
             .characteristics) {
           // Replace with the UUID of your characteristic
           if (characteristic.uuid == Guid(
-              '19B10001-E8F2-537E-4F6C-D104768A1214')) {
-            // List<int> value = await characteristic
-            //     .read();
-            // print(bytesToString(value));
-            // Create a stream for incoming data
-            incomingDataStream = characteristic.lastValueStream;
+              '19B10002-E8F2-537E-4F6C-D104768A1214')) {
+            List<int> value = await characteristic
+                .read();
+            print(bytesToString(value));
 
-            // Start listening to the stream
-            incomingDataStream.listen((List<int> value) {
-              print("Received data: ${bytesToString(value)}");
-              // Handle the incoming data here
-            });
             break;
           }
         }
@@ -204,10 +200,17 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
 
   Stream<List<int>> streamBluetoothData() async* {
     List<BluetoothService> services = await doorSenseDevice!.discoverServices();
-    for (BluetoothService element in services) {
-      var characteristics = element.characteristics;
-      for (BluetoothCharacteristic c in characteristics) {
-        yield* c.lastValueStream;
+    for(BluetoothService service in services) {
+      if (service.uuid == Guid('19B10000-E8F2-537E-4F6C-D104768A1214')) {
+        for (BluetoothCharacteristic characteristic in service.characteristics) {
+          if (characteristic.uuid == Guid('19B10002-E8F2-537E-4F6C-D104768A1214')) {
+            List<int> value = await characteristic.read();
+            // if (bytesToString(value) == 'Remove') {
+            //   readData = 'Remove your finger and place it again.';
+            // }
+            yield* characteristic.lastValueStream;
+          }
+        }
       }
     }
   }
@@ -221,6 +224,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
 
   @override
   void dispose() {
+    disconnectDevice();
     super.dispose();
   }
 
@@ -343,12 +347,9 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                       _showError(context, "Please connect to Doorsense Device via Bluetooth!");
                    }
                    else {
-                     writeData(
-                         0x04); //switch to the enrolling state for the hardware
+                   // writeData(0x04); //switch to the enrolling state for the hardware
+                     readIncomingData();
                      _registerFingerprint(context);
-
-
-
                    }
                 },
                 child: const Stack(children: [
@@ -385,42 +386,24 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
 
 
   Future<void> _registerFingerprint(BuildContext context) {
-    String text = "Place your finger on the fingerprint sensor";
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add Fingerprint'),
-          content: StreamBuilder<List<int>>(
-            stream: streamBluetoothData(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              }
-
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Text('Waiting for data...');
-              }
-
-              // Use the data from the Bluetooth stream here
-              readIncomingData();
-              List<int>? bluetoothData = snapshot.data;
-              return Text('Bluetooth Data: ${bluetoothData.toString()}');
-            },
-          ),
+          content: Text(readData)
         );
       },
     );
   }
 
   Future<void> _placeFingerprintAgain(BuildContext context) {
-    String text = "Remove your finger and place it again.";
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add Fingerprint'),
-          content: Text(text),
+          content: Text(readData),
         );
       },
     );
