@@ -165,15 +165,11 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
     services.forEach((element) async {
       var characteristics = element.characteristics;
       for (BluetoothCharacteristic c in characteristics) {
-        // if (c.properties.read) {
-        //   readData = await c.read();
-        //   print("Read data successfully!");
-        //   print(readData);
-        // }
-        final subscription = c.lastValueStream.listen((event) {
-          print(event);
-        });
-
+        if (c.properties.read) {
+          readData = await c.read();
+          print("Read data successfully!");
+          print(readData);
+        }
       }
     });
   }
@@ -313,22 +309,6 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                 }
               },
             )),
-          StreamBuilder<List<int>>(
-            stream: streamBluetoothData(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              }
-
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Text('Waiting for data...');
-              }
-
-              // Use the data from the Bluetooth stream here
-              List<int>? bluetoothData = snapshot.data;
-              return Text('Bluetooth Data: ${bluetoothData.toString()}');
-            },
-          ),
             GestureDetector(
                 onTap: () {
                    if (doorSenseDevice == null) {
@@ -395,6 +375,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
               }
 
               // Use the data from the Bluetooth stream here
+              readIncomingData();
               List<int>? bluetoothData = snapshot.data;
               return Text('Bluetooth Data: ${bluetoothData.toString()}');
             },
