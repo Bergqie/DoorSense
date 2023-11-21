@@ -165,11 +165,26 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
     services.forEach((element) async {
       var characteristics = element.characteristics;
       for (BluetoothCharacteristic c in characteristics) {
-        if (c.properties.read) {
-          readData = await c.read();
-          print("Read data successfully!");
-          print(readData);
-        }
+        // if (c.properties.read) {
+        //   readData = await c.read();
+        //   print("Read data successfully!");
+        //   print(readData);
+        // }
+        final subscription = c.lastValueStream.listen((event) {
+          print(event);
+        });
+
+      }
+    });
+  }
+
+  Future<void> streamBluetoothData() async {
+    List<BluetoothService> services = await doorSenseDevice!.discoverServices();
+    services.forEach((element) async {
+      var characteristics = element.characteristics;
+      for (BluetoothCharacteristic c in characteristics) {
+
+        return c.lastValueStream;
       }
     });
   }
@@ -197,12 +212,12 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
         actions: [
           IconButton(
               onPressed: () {
-                if (!doorSenseDevice!.isConnected) {
+               // if (!doorSenseDevice!.isConnected || doorSenseDevice == null) {
                   searchForDevice();
-                }
-                else {
-                  disconnectDevice();
-                }
+               // }
+               // else {
+                //  disconnectDevice();
+               // }
               },
               icon: const Icon(Icons.bluetooth_rounded))
         ],
@@ -312,12 +327,6 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                      //check if the read data is 0x01 then show the place finger again dialog
                       //if the read data is 0x02 then show the success dialog
                       readIncomingData();
-                      if (readData[0] == 0x01) {
-                        _placeFingerprintAgain(context);
-                      }
-                      else if (readData[0] == 0x02) {
-                        _successFingerprintEnroll(context);
-                      }
 
                    }
                 },
