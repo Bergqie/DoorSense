@@ -33,17 +33,27 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
 
   bool isRegistering = false;
 
+  Timer? periodicTimer;
+
   void startReadingDataPeriodically() {
     const Duration interval = Duration(seconds: 5); // adjust the interval as needed
 
-    Timer.periodic(interval, (Timer timer) {
-      if (doorSenseDevice == null) {
-        _showError(context, "Please connect to Doorsense Device via Bluetooth!");
-      } else {
-        readIncomingData();
-        _registerFingerprint(context);
-      }
-    });
+    writeData(0x04);
+    _registerFingerprint(context);
+
+    try {
+      periodicTimer = Timer.periodic(interval, (Timer timer) {
+        if (doorSenseDevice == null) {
+          _showError(
+              context, "Please connect to Doorsense Device via Bluetooth!");
+        } else {
+          readIncomingData();
+        }
+      });
+    } catch(e) {
+      print(e);
+      periodicTimer?.cancel();
+    }
   }
 
   void setupBluetooth() async {
@@ -202,7 +212,21 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
               '19B10002-E8F2-537E-4F6C-D104768A1214')) {
             List<int> value = await characteristic
                 .read();
+            print(value);
             print(bytesToString(value));
+
+            if (value[0] == 82) {
+              setState(() {
+                readData = "Remove your finger then place it again on the fingerprint sensor.";
+              });
+              print("Remove state");
+            }
+            else if (value[0] == 83) {
+              setState(() {
+                readData = "Fingerprint enrolled successfully!";
+              });
+              print("Success state");
+            }
 
             break;
           }
@@ -239,6 +263,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
   @override
   void dispose() {
     disconnectDevice();
+    periodicTimer?.cancel();
     super.dispose();
   }
 
@@ -402,7 +427,9 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add Fingerprint'),
-          content: Text(readData)
+          content: StatefulBuilder(builder: (BuildContext context, StateSetter state) {
+            return Text(readData);
+          }),
         );
       },
     );
