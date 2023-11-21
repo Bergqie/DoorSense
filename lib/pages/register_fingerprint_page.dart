@@ -20,7 +20,7 @@ class RegisterFingerprintPage extends StatefulWidget {
 class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
   String username = '';
   String userImageUrl = '';
-  List<String> fingerPrintHashList = [];
+  List<dynamic> fingerPrintHashList = [];
 
   Color connectionColor = Colors.transparent;
 
@@ -35,25 +35,64 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
 
   Timer? periodicTimer;
 
+  Future<void> updateFingerprintList(int data) async {
+    try {
+      final userRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid);
+
+      setState(() {
+        fingerPrintHashList.add(data.toString());
+      });
+
+        await userRef.update({
+          'fingerPrintHash': fingerPrintHashList});
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> removeFingerprint(int index) async {
+    try {
+      final userRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid);
+
+      setState(() {
+        fingerPrintHashList.removeAt(index);
+      });
+
+      await userRef.update({
+        'fingerPrintHash': fingerPrintHashList});
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void setNewFingerprint(int data) async {
+    await updateFingerprintList(data);
+  }
+
   void startReadingDataPeriodically() {
     const Duration interval =
         Duration(seconds: 5); // adjust the interval as needed
+
+    setState(() {
+      isRegistering = true;
+    });
 
     writeData(0x04);
     _registerFingerprint(context);
 
     try {
       periodicTimer = Timer.periodic(interval, (Timer timer) {
-        if (doorSenseDevice == null) {
-          _showError(
-              context, "Please connect to Doorsense Device via Bluetooth!");
-        } else {
+        if (isRegistering) {
           readIncomingData();
         }
       });
     } catch (e) {
       print(e);
-      periodicTimer?.cancel();
+      // periodicTimer?.cancel();
     }
   }
 
@@ -170,6 +209,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
     setState(() {
       username = '${userDoc['firstName']} ${userDoc['lastName']}';
       userImageUrl = userDoc['imageUrl'];
+      fingerPrintHashList = userDoc['fingerPrintHash'];
     });
   }
 
@@ -211,16 +251,11 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
             List<int> value = await characteristic.read();
 
             if (value[0] == 82) {
-              setState(() {
-                readData =
-                    "Remove your finger then place it again on the fingerprint sensor.";
-              });
-              print("WORK");
+              Navigator.of(context).pop();
+              _placeFingerprintAgain(context);
             } else if (value[0] == 83) {
-              setState(() {
-                readData = "Fingerprint enrolled successfully!";
-              });
-              print("PLEASE");
+              Navigator.of(context).pop();
+              _successFingerprintEnroll(context, value[0]);
             }
 
             break;
@@ -231,24 +266,29 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
     }
   }
 
-  Stream<List<int>> streamBluetoothData() async* {
+  void deleteFingerPrintFromMCU(int fingerPrintId) async {
     List<BluetoothService> services = await doorSenseDevice!.discoverServices();
     for (BluetoothService service in services) {
+      // Replace with the UUID of your service
       if (service.uuid == Guid('19B10000-E8F2-537E-4F6C-D104768A1214')) {
         for (BluetoothCharacteristic characteristic
-            in service.characteristics) {
+        in service.characteristics) {
+          // Replace with the UUID of your characteristic
           if (characteristic.uuid ==
-              Guid('19B10002-E8F2-537E-4F6C-D104768A1214')) {
-            List<int> value = await characteristic.read();
-            // if (bytesToString(value) == 'Remove') {
-            //   readData = 'Remove your finger and place it again.';
-            // }
-            yield* characteristic.lastValueStream;
+              Guid('19B10003-E8F2-537E-4F6C-D104768A1214')) {
+            if (characteristic.properties.write) {
+              await characteristic.write([fingerPrintId]);
+              print("Data should delete from $fingerPrintId!");
+            }
+
+            break;
           }
         }
+        break;
       }
     }
   }
+
 
   @override
   void initState() {
@@ -262,6 +302,12 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
     disconnectDevice();
     periodicTimer?.cancel();
     super.dispose();
+  }
+
+  void deleteAllFingerPrints() async {
+    for (int i = 0; i < fingerPrintHashList.length + 1; i++) {
+      await removeFingerprint(i);
+    }
   }
 
   @override
@@ -282,7 +328,48 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                 //  disconnectDevice();
                 // }
               },
-              icon: const Icon(Icons.bluetooth_rounded))
+              icon: const Icon(Icons.bluetooth_rounded)),
+          IconButton(onPressed: () {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title:
+                  const Text('Delete ALL Registered Fingerprints?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: Colors.red,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          deleteAllFingerPrints();
+                          writeData(0x09);
+                        });
+                        Navigator.of(context).pop();
+                      },
+                      style: ButtonStyle(
+                        backgroundColor:
+                        MaterialStateProperty.all(Colors.white),
+                      ),
+                      child: const Text(
+                        'Remove',
+                        style: TextStyle(
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          }, icon: const Icon(Icons.delete_forever_rounded))
         ],
       ),
       body: Container(
@@ -312,17 +399,10 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
               itemCount: fingerPrintHashList.length,
               itemBuilder: (BuildContext context, int index) {
                 print(fingerPrintHashList.length);
-                if (index == 0) {
-                  return Column(
-                    children: [
-                      const Text(
-                          textAlign: TextAlign.center,
-                          "You don\t have any fingerprints registered currently. Click below to get started!"),
-                      IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.add_circle_rounded))
-                    ],
-                  );
+                if (fingerPrintHashList.isEmpty) {
+                  return const Text(
+                      textAlign: TextAlign.center,
+                      "You don't have any fingerprints registered currently. Click below to get started!");
                 } else {
                   return ListTile(
                     leading: const AspectRatio(
@@ -331,46 +411,50 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                     ),
                     title: Text("Fingerprint ${index + 1}"),
                     trailing: IconButton(
-                      icon: const Icon(Icons.delete),
+                      icon: const Icon(Icons.delete_rounded),
                       onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title:
-                                  const Text('Delete Registered Fingerprint?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: const Text(
-                                    'Cancel',
-                                    style: TextStyle(
-                                      color: Colors.red,
+                        if (doorSenseDevice == null) {
+                            _showError(context, "Please connect to Doorsense Device via Bluetooth!");
+                        }else {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title:
+                                const Text('Delete Registered Fingerprint?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: const Text(
+                                      'Cancel',
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      fingerPrintHashList.removeAt(index);
-                                    });
-                                    Navigator.of(context).pop();
-                                  },
-                                  style: ButtonStyle(
-                                    backgroundColor:
-                                        MaterialStateProperty.all(Colors.white),
-                                  ),
-                                  child: const Text(
-                                    'Remove',
-                                    style: TextStyle(
-                                      color: Colors.blue,
+                                  ElevatedButton(
+                                    onPressed: () {
+                                        writeData(0x08);
+                                        removeFingerprint(index);
+                                        deleteFingerPrintFromMCU(0x08);
+                                        Navigator.of(context).pop();
+                                    },
+                                    style: ButtonStyle(
+                                      backgroundColor:
+                                      MaterialStateProperty.all(Colors.white),
+                                    ),
+                                    child: const Text(
+                                      'Remove',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
+                                ],
+                              );
+                            },
+                          );
+                        }
                       },
                     ),
                   );
@@ -431,14 +515,6 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                 builder: (BuildContext context, StateSetter state) {
               return Text(readData);
             }),
-            actions: [
-              if (readData.contains('successfully'))
-                TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text("OK!"))
-            ],
           );
         });
       },
@@ -446,18 +522,20 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
   }
 
   Future<void> _placeFingerprintAgain(BuildContext context) {
+    String text =
+        'Remove your finger then place it again on the fingerprint sensor.';
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add Fingerprint'),
-          content: Text(readData),
+          content: Text(text),
         );
       },
     );
   }
 
-  Future<void> _successFingerprintEnroll(BuildContext context) {
+  Future<void> _successFingerprintEnroll(BuildContext context, int data) {
     String text = "Fingerprint enrolled successfully!";
     return showDialog<void>(
       context: context,
@@ -465,6 +543,17 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
         return AlertDialog(
           title: const Text('Success!'),
           content: Text(text),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  setState(() {
+                    isRegistering = false;
+                  });
+                  setNewFingerprint(data);
+                  Navigator.of(context).pop();
+                },
+                child: const Text("OK!"))
+          ],
         );
       },
     );
