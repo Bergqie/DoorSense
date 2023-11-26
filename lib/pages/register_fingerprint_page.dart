@@ -75,7 +75,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
 
   void startReadingDataPeriodically() {
     const Duration interval =
-        Duration(seconds: 5); // adjust the interval as needed
+        Duration(seconds: 1); // adjust the interval as needed
 
     setState(() {
       isRegistering = true;
@@ -249,31 +249,36 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
   }
 
   void readIncomingData() async {
-    List<BluetoothService> services = await doorSenseDevice!.discoverServices();
-    for (BluetoothService service in services) {
-      // Replace with the UUID of your service
-      if (service.uuid == Guid('19B10000-E8F2-537E-4F6C-D104768A1214')) {
-        for (BluetoothCharacteristic characteristic
-            in service.characteristics) {
-          // Replace with the UUID of your characteristic
-          if (characteristic.uuid ==
-              Guid('19B10002-E8F2-537E-4F6C-D104768A1214')) {
-            List<int> value = await characteristic.read();
+    try {
+      List<BluetoothService> services = await doorSenseDevice!.discoverServices(
+          timeout: 60);
+      for (BluetoothService service in services) {
+        // Replace with the UUID of your service
+        if (service.uuid == Guid('19B10000-E8F2-537E-4F6C-D104768A1214')) {
+          for (BluetoothCharacteristic characteristic
+          in service.characteristics) {
+            // Replace with the UUID of your characteristic
+            if (characteristic.uuid ==
+                Guid('19B10002-E8F2-537E-4F6C-D104768A1214')) {
+              List<int> value = await characteristic.read();
 
-            print(value[1]);
-            if (value[0] == 82) {
-              Navigator.of(context).pop();
-              _placeFingerprintAgain(context);
-            } else if (value[0] == 83) {
-              Navigator.of(context).pop();
-              _successFingerprintEnroll(context, value[0]);
+              if (value[0] == 82) {
+                Navigator.of(context).pop();
+                _placeFingerprintAgain(context);
+              } else if (value[0] == 83) {
+                Navigator.of(context).pop();
+                _successFingerprintEnroll(
+                    context, convertAsciiToInteger(value[1]));
+              }
+
+              break;
             }
-
-            break;
           }
+          break;
         }
-        break;
       }
+    } catch(e) {
+      print(e);
     }
   }
 
@@ -302,11 +307,10 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
 
 
   @override
-  void initState() {
+    void initState() {
     super.initState();
     getUserInfo();
     setupBluetooth();
-    print(convertAsciiToInteger(50));
   }
 
   @override
@@ -448,7 +452,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                                     onPressed: () {
                                         writeData(0x08);
                                         removeFingerprint(index);
-                                        deleteFingerPrintFromMCU(0x08);
+                                        deleteFingerPrintFromMCU(fingerPrintHashList[index]);
                                         Navigator.of(context).pop();
                                     },
                                     style: ButtonStyle(
