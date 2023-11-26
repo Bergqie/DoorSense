@@ -250,6 +250,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
               Guid('19B10002-E8F2-537E-4F6C-D104768A1214')) {
             List<int> value = await characteristic.read();
 
+            print(value[1]);
             if (value[0] == 82) {
               Navigator.of(context).pop();
               _placeFingerprintAgain(context);
