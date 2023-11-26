@@ -200,6 +200,16 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
     });
   }
 
+  int convertAsciiToInteger(int asciiCode) {
+    if (asciiCode >= 0 && asciiCode <= 127) {
+      // Subtract the ASCII code of '0' to get the corresponding integer value
+      return asciiCode - '0'.codeUnitAt(0);
+    } else {
+      throw ArgumentError('ASCII code should be between 0 and 127');
+    }
+  }
+
+
   Future<void> getUserInformation() async {
     final userRef = FirebaseFirestore.instance
         .collection('users')
@@ -296,6 +306,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
     super.initState();
     getUserInfo();
     setupBluetooth();
+    print(convertAsciiToInteger(50));
   }
 
   @override
