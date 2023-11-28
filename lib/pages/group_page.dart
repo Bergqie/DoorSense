@@ -42,9 +42,11 @@ class _GroupPageState extends State<GroupPage> {
   }
 
   List<String> admins = [];
+  String roomName = '';
 
   void getGroupAdmins() async {
     admins = await getAdmins(widget.room.id);
+    roomName = await getRoomName(widget.room.id);
   }
 
   List<types.User> roomUsers = [];
@@ -154,6 +156,27 @@ class _GroupPageState extends State<GroupPage> {
     }
   }
 
+  TextEditingController nameController = TextEditingController();
+
+
+  //update the username
+  Future<void> _updateRoomName() async {
+    try {
+      final userRef = FirebaseFirestore.instance
+          .collection('rooms')
+          .doc(widget.room.id);
+      setState(() {
+        userRef.update({
+          'name': nameController.text,
+
+        });
+        roomName = nameController.text;
+      });
+    } catch(e) {
+      print(e);
+    }
+  }
+
 
   @override
   void initState() {
@@ -168,6 +191,7 @@ class _GroupPageState extends State<GroupPage> {
 
   @override
   void dispose() {
+    nameController.dispose();
     super.dispose();
   }
 
@@ -177,7 +201,36 @@ class _GroupPageState extends State<GroupPage> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: Text(widget.room.name!),
+        title: GestureDetector(onTap: () {
+          showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text('Update Room Name'),
+                  content: TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      hintText: 'i.e. John\'s Vehicle',
+                    ),
+                  ),
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        _updateRoomName();
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Save'),
+                    ),
+                  ],
+                );
+              });
+        }, child: Text(roomName)),
         centerTitle: true,
       ),
       body: Container(

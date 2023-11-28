@@ -19,11 +19,13 @@ class GroupListTile extends StatefulWidget {
 class _GroupListTileState extends State<GroupListTile> {
 
   List<String> admins = [];
+  String roomName = '';
 
   String adminName = '';
 
   void getGroupAdmins() async {
     admins = await getAdmins(widget.room.id);
+    roomName = await getRoomName(widget.room.id);
   }
 
   Future<void> getGroupAdminNames() async {
@@ -64,7 +66,7 @@ class _GroupListTileState extends State<GroupListTile> {
           ),
         ),
       ),
-      title: Text(widget.room.name!),
+      title: Text(roomName),
       subtitle: widget.room.users.length == 1 ? Text("Admin(s): ${widget.room.users.first.firstName} ${widget.room.users.first.lastName}") : Text("Admin(s): $adminName"),
       trailing: IconButton(
         icon: const Icon(Icons.arrow_circle_right_outlined),
