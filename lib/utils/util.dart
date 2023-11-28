@@ -20,3 +20,12 @@ Future<List<String>> getAdmins(String roomId) async {
 
   return admins;
 }
+
+Future<String> getRoomName(String roomId) async {
+  final roomQuery =
+  await FirebaseFirestore.instance.collection('rooms').doc(roomId).get();
+
+  final room = roomQuery.data()!;
+
+  return room['name'];
+}
