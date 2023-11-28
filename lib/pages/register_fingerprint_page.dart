@@ -29,7 +29,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
 
   String deviceName = '';
 
-  String readData = 'Place your finger on the fingerprint sensor.';
+  String readData = 'Place your finger on the fingerprint sensor for a few seconds, remove it, then place the same finger again.';
 
   bool isRegistering = false;
 
@@ -269,6 +269,10 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
                 Navigator.of(context).pop();
                 _successFingerprintEnroll(
                     context, convertAsciiToInteger(value[1]));
+              }
+              else if (value[0] == 45) {
+                Navigator.of(context).pop();
+                _showError(context, "An error occurred while attempting to register your fingerprint. Please try again.");
               }
 
               break;
