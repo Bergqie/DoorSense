@@ -29,3 +29,12 @@ Future<String> getRoomName(String roomId) async {
 
   return room['name'];
 }
+
+Future<String> getUserImageUrl(String userId) async {
+  final userQuery =
+  await FirebaseFirestore.instance.collection('users').doc(userId).get();
+
+  final user = userQuery.data()!;
+
+  return user['imageUrl'];
+}
