@@ -38,3 +38,30 @@ Future<String> getUserImageUrl(String userId) async {
 
   return user['imageUrl'];
 }
+
+Future<void> removeUserFromGroup(String roomId, String userId) async {
+  final roomQuery =
+  await FirebaseFirestore.instance.collection('rooms').doc(roomId).get();
+
+  final room = roomQuery.data()!;
+
+  final userIds = room['userIds'] as List<dynamic>;
+
+  userIds.remove(userId);
+
+  await FirebaseFirestore.instance
+      .collection('rooms')
+      .doc(roomId)
+      .update({'userIds': userIds});
+
+  //remove userId from the userRoles map
+  final userRoles = room['userRoles'] as Map<dynamic, dynamic>;
+
+  userRoles.remove(userId);
+
+  await FirebaseFirestore.instance
+      .collection('rooms')
+      .doc(roomId)
+      .update({'userRoles': userRoles});
+
+}

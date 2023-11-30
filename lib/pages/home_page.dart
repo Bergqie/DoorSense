@@ -171,8 +171,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   void initializeFlutterFire() async {
     try {
-     // requestPermissionForNotifications();
-     // initNotificationInformation();
+      // requestPermissionForNotifications();
+      // initNotificationInformation();
       FirebaseAuth.instance.authStateChanges().listen((User? user) {
         setState(() {
           _user = user;
@@ -260,7 +260,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                 showRequestSent();
                               }
                             } else {
-                              showErrorRequest();
+                              // showErrorRequest();
                             }
                           }
                         },
@@ -400,12 +400,19 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         );
                       }
 
-                      return ListView.builder(
-                          itemCount: snapshot.data!.length,
-                          itemBuilder: (context, index) {
-                            final room = snapshot.data![index];
-                            return GroupListTile(room: room);
-                          });
+                      return RefreshIndicator(
+                          onRefresh: () async {
+                            // Add your refresh logic here, e.g., fetching updated data
+                            // For example, you can call your Firebase function again.
+                            // For now, I'll just use a Future.delayed to simulate a refresh.
+                            await Future.delayed(const Duration(seconds: 2));
+                          },
+                          child: ListView.builder(
+                              itemCount: snapshot.data!.length,
+                              itemBuilder: (context, index) {
+                                final room = snapshot.data![index];
+                                return GroupListTile(room: room);
+                              }));
                     })),
           ],
         ),
