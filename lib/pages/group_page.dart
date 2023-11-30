@@ -244,7 +244,7 @@ class _GroupPageState extends State<GroupPage> {
         child: Column(
           children: <Widget>[
             const SizedBox(height: 20),
-            !isAdmin
+            isAdmin
                 ? Text(
                     "Group Code: $groupCode",
                     style: const TextStyle(
@@ -305,6 +305,10 @@ class _GroupPageState extends State<GroupPage> {
                                                RegisterFingerprintPage(room: widget.room,)));
                                 } else {
                                   // Handle delete action for other items
+                                  _removeUserFromGroup(
+                                      context,
+                                      "${roomUsers[index].firstName} ${roomUsers[index].lastName}",
+                                      roomUsers[index].id);
                                 }
                               },
                             ),
@@ -337,6 +341,29 @@ class _GroupPageState extends State<GroupPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _removeUserFromGroup(BuildContext context, String username, String userId) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Remove User'),
+          content: Text("Would you like to remove $username from the group?"),
+          actions: [
+            TextButton(
+                onPressed: () async {
+                  await removeUserFromGroup(widget.room.id, userId);
+                  Navigator.of(context).pop();
+                },
+                child: const Text("OK!")),
+                TextButton(onPressed: () {
+                  Navigator.of(context).pop();
+                }, child: const Text("Cancel"))
+          ],
+        );
+      },
     );
   }
 }

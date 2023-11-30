@@ -38,10 +38,17 @@ class _GroupListTileState extends State<GroupListTile> {
 
   void getUserImages() async {
     for (int i = 0; i < widget.room.users.length; i++) {
-      String url = await getUserImageUrl(widget.room.users[i].id);
-      imageUrls.add(url);
+      // Check if the number of URLs is less than 4 before adding a new URL
+      if (imageUrls.length < 4) {
+        String url = await getUserImageUrl(widget.room.users[i].id);
+        imageUrls.add(url);
+      } else {
+        // Break out of the loop if the maximum limit is reached
+        break;
+      }
     }
   }
+
 
   void getAdminNames() async {
     await getGroupAdminNames();
@@ -51,10 +58,10 @@ class _GroupListTileState extends State<GroupListTile> {
   void initState() {
     super.initState();
     getGroupAdmins();
+    getUserImages();
     // Delayed execution of getAdminNames
     Future.delayed(const Duration(milliseconds: 500), () {
       getAdminNames();
-      getUserImages();
     });
   }
 
@@ -72,7 +79,7 @@ class _GroupListTileState extends State<GroupListTile> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              for (int i = 0; i < min(imageUrls.length, 4); i++) //limit the amount of photos to 4
+              for (int i = 0; i < imageUrls.length; i++) //limit the amount of photos to 4
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 0),
                   child: Align(

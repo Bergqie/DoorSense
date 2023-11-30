@@ -135,7 +135,6 @@ class _ActivityFeedItemState extends State<ActivityFeedItem> {
       if (roomSnapshot.data()['groupCode'] == groupCode) {
         roomSnapshot.reference.update({
           'userIds': FieldValue.arrayUnion([widget.snap['userId']]),
-          'userRoles': {widget.snap['userId']: types.Role.user.toShortString()},
         });
       }
     }
