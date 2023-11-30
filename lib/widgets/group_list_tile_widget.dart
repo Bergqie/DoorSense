@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doorsense/pages/group_page.dart';
@@ -70,7 +72,7 @@ class _GroupListTileState extends State<GroupListTile> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              for (int i = 0; i < 4; i++) //limit the amount of photos to 4
+              for (int i = 0; i < min(imageUrls.length, 4); i++) //limit the amount of photos to 4
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 0),
                   child: Align(
