@@ -559,6 +559,7 @@ class _RegisterFingerprintPageState extends State<RegisterFingerprintPage> {
     String text = "Fingerprint enrolled successfully!";
     return showDialog<void>(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Success!'),
